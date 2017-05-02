@@ -2,8 +2,13 @@ var page = require("webpage").create();
 var fs = require('fs');
 var outputCount = 0;
 address = "https://www.google.com/search?q=speedtest";
+lastUpload = "0";
 
-page.settings.userAgent = "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/37.0.2062.120 Safari/537.36";
+//page.viewportSize = {
+//  width: 480,
+//  height: 800
+//};
+page.settings.userAgent = "Mozilla/5.0 (Linux; Android 5.1.1; Nexus 5 Build/LMY48B; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/43.0.2357.65 Mobile Safari/537.36";
 page.open(address, function(status) {
 	if (status !== "success") {
 		console.log("Check internet connection");
@@ -38,12 +43,21 @@ function updateSpeedtestData() {
 
   //console.log(info);
 
-	if (info.length > 3 && info[3] === "Testing download...") {
-		console.log("D: " + info[1] + " " + info[2]);
+	if (info.length > 3 && info[3] === "Testing download..." && info[0] !== "┬á") {
+		console.log("D: " + info[1].toFixed(2) + " " + info[2]);
 	}
-	else if (info.length > 3 && info[3] === "Testing upload...") {
-		console.log("U: " + info[1] + " " + info[2]);
-    writeCurrPageToFile();
+	else if (info.length > 3 && info[3] === "Testing upload..." && info[0] !== "┬á") {
+
+    if(lastUpload == "0")
+    {
+      lastUpload = info[1];
+    }
+    else {
+		    console.log("U: " + (lastUpload/100).toFixed(2) + " " + info[2]);
+        lastUpload = info[1];
+    }
+
+
 		var possibleFinalData = page.evaluate(function() {
 			return document.getElementById("lrfactory-internetspeed__upload").innerText.split("\n")[0];
 		});
@@ -64,8 +78,8 @@ function finalSpeedtestData() {
 	var upload = page.evaluate(function() {
 		return document.getElementById("lrfactory-internetspeed__upload").innerText.replace(/\n/gi, "").replace(" upload", "");
 	});
-  
-	console.log("P:" + ping + " D:" + download + " U:" + upload);
+
+	console.log("P:" + ping + " D:" + download.toFixed(2) + " U:" + upload.toFixed(2));
 	phantom.exit();
 }
 
