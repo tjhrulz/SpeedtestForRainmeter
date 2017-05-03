@@ -23,11 +23,22 @@ page.open(address, function(status) {
 
 
 function runSpeedtest() {
-	clickStart();
-	updater = setInterval(updateSpeedtestData, 150);
+
+	if (page.evaluate(function() {
+			return document.getElementById("lrfactory-internetspeed__upload");
+		})) {
+		console.log("Google");
+		runSpeedtestGoogle();
+	}
+	else {
+		console.log("Fast");
+
+		//Run in 100ms so that way the connection to google has time to close
+		setTimeout(runSpeedtestFast,100);
+	}
 }
 
-function clickStart() {
+function runSpeedtestGoogle() {
 	fs.write("output.txt", "", 'w');
 	page.evaluate(function() {
 		var a = document.getElementById("lrfactory-internetspeed__test_button");
@@ -35,28 +46,29 @@ function clickStart() {
 		e.initMouseEvent('click', true, true, window, 0, 0, 0, 0, 0, false, false, false, false, 0, null);
 		a.dispatchEvent(e);
 	});
+
+	updater = setInterval(updateSpeedtestDataGoogle, 150);
 }
 
-function updateSpeedtestData() {
+function updateSpeedtestDataGoogle() {
 	var info = page.evaluate(function() {
 		return document.getElementsByClassName("lrfactory-internetspeed__status-indicator")[0].innerText.split("\n");
 	});
 
-  //writeCurrPageToFile();
+	//writeCurrPageToFile();
 
 	if (info.length > 3 && info[3] === "Testing download..." && info[0] !== "┬á") {
 		fs.write("output.txt", "D: " + (Math.round(info[1] * 100) / 100).toFixed(2) + " " + info[2] + "\n", 'a');
 	}
 	else if (info.length > 3 && info[3] === "Testing upload..." && info[0] !== "┬á") {
 
-    if(lastUpload == "0")
-    {
-      lastUpload = info[1];
-    }
-    else {
-		    fs.write("output.txt", "U: " + (Math.round(lastUpload) / 100).toFixed(2) + " " + info[2] + "\n", 'a');
-        lastUpload = info[1];
-    }
+		if (lastUpload == "0") {
+			lastUpload = info[1];
+		}
+		else {
+			fs.write("output.txt", "U: " + (Math.round(lastUpload) / 100).toFixed(2) + " " + info[2] + "\n", 'a');
+			lastUpload = info[1];
+		}
 
 
 		var possibleFinalData = page.evaluate(function() {
@@ -64,15 +76,15 @@ function updateSpeedtestData() {
 		});
 		if (possibleFinalData !== " ") {
 			clearInterval(updater);
-			finalSpeedtestData();
+			finalSpeedtestDataGoogle();
 		}
 	}
 }
 
-function finalSpeedtestData() {
-  var ping = page.evaluate(function() {
-    return document.getElementById("lrfactory-internetspeed__latency").innerText.replace("Latency: ", "");
-  });
+function finalSpeedtestDataGoogle() {
+	var ping = page.evaluate(function() {
+		return document.getElementById("lrfactory-internetspeed__latency").innerText.replace("Latency: ", "");
+	});
 	var download = page.evaluate(function() {
 		return document.getElementById("lrfactory-internetspeed__download").innerText.replace(/\n/gi, "").replace(" download", "");
 	});
@@ -84,8 +96,53 @@ function finalSpeedtestData() {
 	phantom.exit();
 }
 
-function writeCurrPageToFile()
-{
-  fs.write(outputCount + "output.html", page.evaluate( function(){ return document.body.innerHTML; }), 'w');
-  outputCount++;
+function runSpeedtestFast() {
+	address = "https://fast.com/";
+	page.open(address, function(status) {
+		if (status !== "success") {
+			fs.write("output.txt", "Check internet connection\n", 'w');
+			fs.write("output.txt", "P:" + "-1" + " D:" + "-1" + " U:" + "-1\n", 'a');
+			phantom.exit();
+		}
+		else {
+
+			fs.write("output.txt", "", 'w');
+			updater = setInterval(updateSpeedtestDataFast, 150);
+
+		}
+	});
+}
+
+function updateSpeedtestDataFast() {
+	var speed = page.evaluate(function() {
+		return document.getElementById("speed-value").innerText;
+	});
+	var units = page.evaluate(function() {
+		return document.getElementById("speed-units").innerText;
+	});
+
+	//writeCurrPageToFile();
+
+	fs.write("output.txt", "D: " + (Math.round(speed * 100) / 100).toFixed(2) + " " + units + "\n", 'a');
+
+	var buttonState = page.evaluate(function() {
+		return document.getElementById("speed-progress-indicator-icon").classList[2];
+	});
+
+	if (buttonState == "oc-icon-refresh") {
+		clearInterval(updater);
+		finalSpeedtestDataFast();
+	}
+
+}
+
+function finalSpeedtestDataFast() {
+	phantom.exit();
+}
+
+function writeCurrPageToFile() {
+	fs.write(outputCount + "output.html", page.evaluate(function() {
+		return document.body.innerHTML;
+	}), 'w');
+	outputCount++;
 }
