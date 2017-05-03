@@ -122,7 +122,11 @@ function updateSpeedtestDataFast() {
 	});
 
 	//writeCurrPageToFile();
-
+	
+	if (units == " ") {
+		units = "none"
+	}
+	
 	fs.write("output.txt", "D: " + (Math.round(speed * 100) / 100).toFixed(2) + " " + units + "\n", 'a');
 
 	var buttonState = page.evaluate(function() {
@@ -131,6 +135,7 @@ function updateSpeedtestDataFast() {
 
 	if (buttonState == "oc-icon-refresh") {
 		clearInterval(updater);
+		fs.write("output.txt", "D: Done Done\n",'a')
 		finalSpeedtestDataFast();
 	}
 
