@@ -11,10 +11,11 @@ lastUpload = "0";
 page.settings.userAgent = "Mozilla/5.0 (Linux; Android 5.1.1; Nexus 5 Build/LMY48B; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/43.0.2357.65 Mobile Safari/537.36";
 page.open(address, function(status) {
 	if (status !== "success") {
-		console.log("Check internet connection");
+		fs.write("output.txt", "Check internet connection\n", 'w');
+		fs.write("output.txt", "P:" + "-1" + " D:" + "-1" + " U:" + "-1\n", 'a');
+		phantom.exit();
 	}
 	else {
-		//console.log("Starting google search speedtest");
 
 		runSpeedtest();
 	}
@@ -22,12 +23,12 @@ page.open(address, function(status) {
 
 
 function runSpeedtest() {
-	//console.log("Running google search speedtest");
 	clickStart();
 	updater = setInterval(updateSpeedtestData, 150);
 }
 
 function clickStart() {
+	fs.write("output.txt", "", 'w');
 	page.evaluate(function() {
 		var a = document.getElementById("lrfactory-internetspeed__test_button");
 		var e = document.createEvent('MouseEvents');
@@ -41,10 +42,10 @@ function updateSpeedtestData() {
 		return document.getElementsByClassName("lrfactory-internetspeed__status-indicator")[0].innerText.split("\n");
 	});
 
-  //console.log(info);
+  //writeCurrPageToFile();
 
 	if (info.length > 3 && info[3] === "Testing download..." && info[0] !== "┬á") {
-		console.log("D: " + info[1].toFixed(2) + " " + info[2]);
+		fs.write("output.txt", "D: " + (Math.round(info[1] * 100) / 100).toFixed(2) + " " + info[2] + "\n", 'a');
 	}
 	else if (info.length > 3 && info[3] === "Testing upload..." && info[0] !== "┬á") {
 
@@ -53,7 +54,7 @@ function updateSpeedtestData() {
       lastUpload = info[1];
     }
     else {
-		    console.log("U: " + (lastUpload/100).toFixed(2) + " " + info[2]);
+		    fs.write("output.txt", "U: " + (Math.round(lastUpload) / 100).toFixed(2) + " " + info[2] + "\n", 'a');
         lastUpload = info[1];
     }
 
@@ -79,7 +80,7 @@ function finalSpeedtestData() {
 		return document.getElementById("lrfactory-internetspeed__upload").innerText.replace(/\n/gi, "").replace(" upload", "");
 	});
 
-	console.log("P:" + ping + " D:" + download.toFixed(2) + " U:" + upload.toFixed(2));
+	fs.write("output.txt", "P:" + ping + " D:" + download + " U:" + upload + "\n", 'a');
 	phantom.exit();
 }
 
