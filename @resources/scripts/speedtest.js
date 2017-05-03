@@ -3,9 +3,19 @@ var fs = require('fs');
 var system = require('system');
 
 //@TODO Make output file consistent accross all speedtests
+	//Sites that use new standard: Fast.com, Google.com, Bandwidthplace.com
+//@TODO Make first line of file what the site is and the second flag what kind of support to expect
+	//Sites that use new standard: Fast.com, Google.com, Bandwidthplace.com
 //@TODO Decide if I wan to support ISP based speedtests?
+	//Decided I will but it seems most use flash, need to sit and go through them and add to the support todo
 //@TODO Decide on a new fallback for Google that has the same feature set
-//@TODO Make first line of file flag what kind of support to expect
+//@TODO Fine tune refresh speeds per site
+	//Sites that are fine turned:
+//@TODO Add fatal error catching (Possibly add timeout too?)
+//@TODO Fix bandwidthplace sometimes getting ping stuck (Reset connection after so too long pinging (Note I have no way of knowing ping till it is done), maybe 5 seconds?)
+	//Note sometimes it seems like it is stuck but it is not since it seems they run multiple pings
+//@TODO Sites to add support for:
+	//beta.speedtest.net (Again)
 
 if (system.args.length > 1) {
 	address = system.args[1].toLowerCase();
@@ -89,11 +99,13 @@ function runSpeedtestGoogle() {
 	if (page.evaluate(function() {
 			return document.getElementById("lrfactory-internetspeed__upload");
 		})) {
-		console.log("Google");
 
 
 		lastUpload = "0";
-		fs.write("output.txt", "", 'w');
+		lastUploadUnits = "";
+
+		console.log("Google");
+		fs.write("output.txt", "Site: Google\nSupports: P U D F\n", 'w');
 		page.evaluate(function() {
 			var a = document.getElementById("lrfactory-internetspeed__test_button");
 			var e = document.createEvent('MouseEvents');
@@ -104,8 +116,6 @@ function runSpeedtestGoogle() {
 		updater = setInterval(updateSpeedtestDataGoogle, 150);
 	}
 	else {
-		console.log("Fast");
-
 		//Run in 100ms so that way the connection to google has time to close
 		setTimeout(runSpeedtestFast, 100);
 	}
@@ -118,16 +128,18 @@ function updateSpeedtestDataGoogle() {
 
 	//writeCurrPageToFile();
 
-	if (info.length > 3 && info[3] === "Testing download..." && info[0] !== "┬á") {
-		fs.write("output.txt", "D: " + (Math.round(info[1] * 100) / 100).toFixed(2) + " " + info[2] + "\n", 'a');
+	if (info.length > 3 && info[3] === "Testing download..." && info[0] !== "┬á" && info[1] !== " ") {
+		fs.write("output.txt", "D: " + (Math.round(info[1] * 100) / 100).toFixed(2) + " " + info[2].replace("Megabits per second", "Mbps").replace("Gigabits per second", "Gbps").replace("Kilobits per second", "Kbps") + "\n", 'a');
 	}
-	else if (info.length > 3 && info[3] === "Testing upload..." && info[0] !== "┬á") {
+	else if (info.length > 3 && info[3] === "Testing upload..." && info[0] !== "┬á" && info[1] !== " ") {
 
 		if (lastUpload == "0") {
+			//Due to the issues with google giving me values 100 times as large for all but the last value the value displayed is one cycle old
 			lastUpload = info[1];
+			lastUploadUnits = info[2].replace("Megabits per second", "Mbps").replace("Gigabits per second", "Gbps").replace("Kilobits per second", "Kbps");
 		}
 		else {
-			fs.write("output.txt", "U: " + (Math.round(lastUpload) / 100).toFixed(2) + " " + info[2] + "\n", 'a');
+			fs.write("output.txt", "U: " + (Math.round(lastUpload) / 100).toFixed(2) + " " + lastUploadUnits + "\n", 'a');
 			lastUpload = info[1];
 		}
 
@@ -147,13 +159,14 @@ function finalSpeedtestDataGoogle() {
 		return document.getElementById("lrfactory-internetspeed__latency").innerText.replace("Latency: ", "");
 	});
 	var download = page.evaluate(function() {
-		return document.getElementById("lrfactory-internetspeed__download").innerText.replace(/\n/gi, "").replace(" download", "");
+		return document.getElementById("lrfactory-internetspeed__download").innerText.replace(" download", "").split("\n");
 	});
 	var upload = page.evaluate(function() {
-		return document.getElementById("lrfactory-internetspeed__upload").innerText.replace(/\n/gi, "").replace(" upload", "");
+		return document.getElementById("lrfactory-internetspeed__upload").innerText.replace(" upload", "").split("\n");
 	});
 
-	fs.write("output.txt", "P:" + ping + " D:" + download + " U:" + upload + "\n", 'a');
+	//Loc[0] is speed Loc[1] is units
+	fs.write("output.txt", "F: P:" + ping + " D: " + download[0] + " " + download[1] + " U: " + upload[0] + " " + upload[1], 'a');
 	phantom.exit();
 }
 
@@ -180,7 +193,9 @@ function switchToFast() {
 }
 
 function runSpeedtestFast() {
-	fs.write("output.txt", "", 'w');
+	console.log("Fast");
+	fs.write("output.txt", "Site: Fast\nSupports: D F\n", 'w');
+
 	updater = setInterval(updateSpeedtestDataFast, 150);
 }
 
@@ -194,11 +209,9 @@ function updateSpeedtestDataFast() {
 
 	//writeCurrPageToFile();
 
-	if (units == " ") {
-		units = "none";
+	if (units !== " ") {
+		fs.write("output.txt", "D: " + (Math.round(speed * 100) / 100).toFixed(2) + " " + units + "\n", 'a');
 	}
-
-	fs.write("output.txt", "D: " + (Math.round(speed * 100) / 100).toFixed(2) + " " + units + "\n", 'a');
 
 	var buttonState = page.evaluate(function() {
 		return document.getElementById("speed-progress-indicator-icon").classList[2];
@@ -206,13 +219,13 @@ function updateSpeedtestDataFast() {
 
 	if (buttonState == "oc-icon-refresh") {
 		clearInterval(updater);
-		fs.write("output.txt", "D: Done Done\n", 'a');
-		finalSpeedtestDataFast();
+		finalSpeedtestDataFast(speed, units);
 	}
 
 }
 
-function finalSpeedtestDataFast() {
+function finalSpeedtestDataFast(speed, units) {
+	fs.write("output.txt", "F: D: " + (Math.round(speed * 100) / 100).toFixed(2) + " " + units, 'a');
 	phantom.exit();
 }
 
@@ -242,9 +255,9 @@ function switchToSpeedof() {
 }
 
 function runSpeedtestSpeedof() {
-	console.log("SpeedOf");
+	console.log("Speedof");
+	fs.write("output.txt", "Site: Speedof\nSupports: P U D F\n", 'w');
 
-	fs.write("output.txt", "", 'w');
 	page.evaluate(function() {
 		var a = document.getElementById("btnStart");
 		var e = document.createEvent('MouseEvents');
@@ -314,7 +327,7 @@ function switchToBandwidthplace() {
 	address = "http://www.bandwidthplace.com/";
 	page.open(address, function(status) {
 		if (status !== "success") {
-			fs.write("output.txt", "Check internet connection to http://speedof.me/\n", 'w');
+			fs.write("output.txt", "Check internet connection to http://www.bandwidthplace.com/\n", 'w');
 			fs.write("output.txt", "P:" + "-1" + " D:" + "-1" + " U:" + "-1\n", 'a');
 			phantom.exit();
 		}
@@ -326,8 +339,8 @@ function switchToBandwidthplace() {
 
 function runSpeedtestBandwidthplace() {
 	console.log("Bandwidthplace");
+	fs.write("output.txt", "Site: Bandwidthplace\nSupports: P U D F\n", 'w');
 
-	fs.write("output.txt", "", 'w');
 	page.evaluate(function() {
 		var a = document.getElementById("start-button");
 		var e = document.createEvent('MouseEvents');
@@ -346,17 +359,17 @@ function updateSpeedtestDataBandwidthplace() {
 	var speed = page.evaluate(function() {
 		return document.getElementById("tool-speed").innerText;
 	});
-	var size = page.evaluate(function() {
+	var units = page.evaluate(function() {
 		return document.getElementById("tool-metrics").innerText;
 	});
 
 	//writeCurrPageToFile();
 
 	if (state === "Downloading" && speed !== "--.--") {
-		fs.write("output.txt", "D: " + (Math.round(speed * 100) / 100).toFixed(2) + " " + size + "\n", 'a');
+		fs.write("output.txt", "D: " + (Math.round(speed * 100) / 100).toFixed(2) + " " + units + "\n", 'a');
 	}
 	else if (state === "Uploading" && speed !== "--.--") {
-		fs.write("output.txt", "U: " + (Math.round(speed * 100) / 100).toFixed(2) + " " + size + "\n", 'a');
+		fs.write("output.txt", "U: " + (Math.round(speed * 100) / 100).toFixed(2) + " " + units + "\n", 'a');
 	}
 	else if (state === "Done" || state === "Ready") {
 		clearInterval(updater);
@@ -377,7 +390,7 @@ function finalSpeedtestDataBandwidthplace() {
 		return document.getElementById("upload").innerText.replace("Upload", "").split("\n");
 	});
 
-	fs.write("output.txt", "P:" + ping[1] + ping[2] + " D:" + download[1] + download[2] + " U:" + upload[1] + upload[2] + "\n", 'a');
+	fs.write("output.txt", "F: P:" + ping[1] + " " + ping[2] + " D:" + download[1] + " " + download[2] + " U:" + upload[1] + " " + upload[2] + "\n", 'a');
 	phantom.exit();
 }
 
