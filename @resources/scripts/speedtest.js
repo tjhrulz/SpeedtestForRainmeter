@@ -2,6 +2,11 @@ var page = require("webpage").create();
 var fs = require('fs');
 var system = require('system');
 
+//@TODO Make output file consistent accross all speedtests
+//@TODO Decide if I wan to support ISP based speedtests?
+//@TODO Decide on a new fallback for Google that has the same feature set
+//@TODO Make first line of file flag what kind of support to expect
+
 if (system.args.length > 1) {
 	address = system.args[1].toLowerCase();
 
@@ -15,10 +20,12 @@ if (system.args.length > 1) {
 		address = "https://fast.com/";
 	}
 	else if (address == "speedof" || address == "speedofme") {
-
 		console.log("Speedof blocks phantomjs, switching to google");
 		address = "https://www.google.com/search?q=speedtest";
 		//address = "http://speedof.me/";
+	}
+	else if (address == "bandwidthplace" || address == "place" || address == "bandwidth") {
+		address = "http://www.bandwidthplace.com/";
 	}
 	else if (address.substring(0, 8) !== "https://" && address.substring(0, 7) !== "http://") {
 		address = "http://" + address;
@@ -33,8 +40,8 @@ console.log(address);
 var outputCount = 0;
 
 page.viewportSize = {
-  width: 480,
-  height: 800
+	width: 480,
+	height: 800
 };
 page.settings.userAgent = "Mozilla/5.0 (Linux; Android 5.1.1; Nexus 5 Build/LMY48B; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/43.0.2357.65 Mobile Safari/537.36";
 
@@ -58,6 +65,9 @@ page.open(address, function(status) {
 		}
 		else if (address == "http://speedof.me/") {
 			runSpeedtestSpeedof();
+		}
+		else if (address == "http://www.bandwidthplace.com/") {
+			runSpeedtestBandwidthplace();
 		}
 		else {
 			fs.write("output.txt", "Unsupported speedtest website " + address + "\n", 'w');
@@ -285,6 +295,89 @@ function updateSpeedtestDataSpeedof() {
 function finalSpeedtestDataSpeedof(downloadSpeed, downloadSize, uploadSpeed, uploadSize) {
 
 	fs.write("output.txt", "P:" + "-1" + " D:" + downloadSpeed + downloadSize + " U:" + uploadSpeed + uploadSize + "\n", 'a');
+	phantom.exit();
+}
+
+/*
+██████   █████  ███    ██ ██████  ██     ██ ██ ██████  ████████ ██   ██ ██████  ██       █████   ██████ ███████
+██   ██ ██   ██ ████   ██ ██   ██ ██     ██ ██ ██   ██    ██    ██   ██ ██   ██ ██      ██   ██ ██      ██
+██████  ███████ ██ ██  ██ ██   ██ ██  █  ██ ██ ██   ██    ██    ███████ ██████  ██      ███████ ██      █████
+██   ██ ██   ██ ██  ██ ██ ██   ██ ██ ███ ██ ██ ██   ██    ██    ██   ██ ██      ██      ██   ██ ██      ██
+██████  ██   ██ ██   ████ ██████   ███ ███  ██ ██████     ██    ██   ██ ██      ███████ ██   ██  ██████ ███████
+*/
+
+//***************************************
+//SEEMS WEBSITE HAS SOME STABILITY ISSUES
+//***************************************
+
+function switchToBandwidthplace() {
+	address = "http://www.bandwidthplace.com/";
+	page.open(address, function(status) {
+		if (status !== "success") {
+			fs.write("output.txt", "Check internet connection to http://speedof.me/\n", 'w');
+			fs.write("output.txt", "P:" + "-1" + " D:" + "-1" + " U:" + "-1\n", 'a');
+			phantom.exit();
+		}
+		else {
+			runSpeedtestBandwidthplace();
+		}
+	});
+}
+
+function runSpeedtestBandwidthplace() {
+	console.log("Bandwidthplace");
+
+	fs.write("output.txt", "", 'w');
+	page.evaluate(function() {
+		var a = document.getElementById("start-button");
+		var e = document.createEvent('MouseEvents');
+		e.initMouseEvent('click', true, true, window, 0, 0, 0, 0, 0, false, false, false, false, 0, null);
+		a.dispatchEvent(e);
+	});
+
+	updater = setInterval(updateSpeedtestDataBandwidthplace, 150);
+
+}
+
+function updateSpeedtestDataBandwidthplace() {
+	var state = page.evaluate(function() {
+		return document.getElementById("tool-status").innerText;
+	});
+	var speed = page.evaluate(function() {
+		return document.getElementById("tool-speed").innerText;
+	});
+	var size = page.evaluate(function() {
+		return document.getElementById("tool-metrics").innerText;
+	});
+
+	//writeCurrPageToFile();
+
+	if (state === "Downloading" && speed !== "--.--") {
+		fs.write("output.txt", "D: " + (Math.round(speed * 100) / 100).toFixed(2) + " " + size + "\n", 'a');
+	}
+	else if (state === "Uploading" && speed !== "--.--") {
+		fs.write("output.txt", "U: " + (Math.round(speed * 100) / 100).toFixed(2) + " " + size + "\n", 'a');
+	}
+	else if (state === "Done" || state === "Ready") {
+		clearInterval(updater);
+		finalSpeedtestDataBandwidthplace();
+	}
+}
+
+function finalSpeedtestDataBandwidthplace() {
+
+	//For each of these loc[1] is speed, loc[2] is units
+	var ping = page.evaluate(function() {
+		return document.getElementById("ping").innerText.replace("Ping", "").split("\n");
+	});
+	var download = page.evaluate(function() {
+		return document.getElementById("download").innerText.replace("Download", "").split("\n");
+	});
+	var upload = page.evaluate(function() {
+		return document.getElementById("upload").innerText.replace("Upload", "").split("\n");
+	});
+
+	fs.write("output.txt", "P:" + ping[1] + ping[2] + " D:" + download[1] + download[2] + " U:" + upload[1] + upload[2] + "\n", 'a');
 	phantom.exit();
 }
 
