@@ -111,7 +111,7 @@ page.open(address, function(status) {
 
 	if (status !== "success") {
 		fs.write("output.txt", "Check internet connection to " + address + "\n", 'w');
-		fs.write("output.txt", "P: " + "-1 " + "D: " + "-1 " + "U: " + "-1", 'a');
+		fs.write("output.txt", "F: P: " + "-1 " + "D: " + "-1 " + "U: " + "-1", 'a');
 		phantom.exit();
 	}
 	else {
@@ -237,7 +237,7 @@ function switchToFast() {
 	page.open(address, function(status) {
 		if (status !== "success") {
 			fs.write("output.txt", "Check internet connection to https://fast.com/\n", 'w');
-			fs.write("output.txt", "P: " + "-1 " + "D: " + "-1 " + "U: " + "-1", 'a');
+			fs.write("output.txt", "F: D: " + "-1 ", 'a');
 			phantom.exit();
 		}
 		else {
@@ -299,7 +299,7 @@ function switchToSpeedof() {
 	page.open(address, function(status) {
 		if (status !== "success") {
 			fs.write("output.txt", "Check internet connection to http://speedof.me/\n", 'w');
-			fs.write("output.txt", "P: " + "-1 " + "D: " + "-1 " + "U: " + "-1", 'a');
+			fs.write("output.txt", "F: P: " + "-1 " + "D: " + "-1 " + "U: " + "-1", 'a');
 			phantom.exit();
 		}
 		else {
@@ -382,7 +382,7 @@ function switchToBandwidthplace() {
 	page.open(address, function(status) {
 		if (status !== "success") {
 			fs.write("output.txt", "Check internet connection to http://www.bandwidthplace.com/\n", 'w');
-			fs.write("output.txt", "P: " + "-1 " + "D: " + "-1 " + "U: " + "-1", 'a');
+			fs.write("output.txt", "F: P: " + "-1 " + "D: " + "-1 " + "U: " + "-1", 'a');
 			phantom.exit();
 		}
 		else {
