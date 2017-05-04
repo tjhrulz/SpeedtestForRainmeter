@@ -8,60 +8,52 @@ var system = require('system');
 //I would ask that you credit me for helping you and that you feel free to send any issues you have or help you need my way
 
 //@Inputs: An argument of either the shorthand or the full speedtest site url
-	//Supported nicknames and full URL:
-	//Google https://www.google.com/search?q=speedtest
-	//Bandwidthplace http://www.bandwidthplace.com/
-	//Netflix or Fast https://fast.com/
-	//Speedtestbeta http://beta.speedtest.net/
+//Supported nicknames and full URL:
+//Google https://www.google.com/search?q=speedtest
+//Bandwidthplace http://www.bandwidthplace.com/
+//Netflix or Fast https://fast.com/
+//Speedtestbeta http://beta.speedtest.net/
 //@Outputs: One output.txt formatted as follows, D and U row length is not fixed and the file is updated in real time
-	//Site: #SiteNickname#
-	//Supports: P D U F
-	//D: #Speed# #Units#
-	//D: #Speed# #Units#
-	//D: #Speed# #Units#
-	//U: #Speed# #Units#
-	//U: #Speed# #Units#
-	//U: #Speed# #Units#
-	//U: #Speed# #Units#
-	//F: P: #Ping# ms D: #Speed# #Units# U: #Speed# #Units#
+//Site: #SiteNickname#
+//Supports: P D U F
+//D: #Speed# #Units#
+//D: #Speed# #Units#
+//D: #Speed# #Units#
+//U: #Speed# #Units#
+//U: #Speed# #Units#
+//U: #Speed# #Units#
+//U: #Speed# #Units#
+//F: P: #Ping# ms D: #Speed# #Units# U: #Speed# #Units#
 
-	//So a speedtest from fast.com could look like this
-	//Site: Fast
-	//Supports: D F
-	//D: 16.00 Kbps
-	//D: 16.00 Kbps
-	//D: 88.00 Kbps
-	//D: 280.00 Kbps
-	//D: 560.00 Kbps
-	//D: 560.00 Kbps
-	//D: 2.60 Mbps
-	//D: 2.60 Mbps
-	//D: 5.90 Mbps
-	//D: 9.90 Mbps
-	//D: 14.00 Mbps
-	//D: 21.00 Mbps
-	//D: 38.00 Mbps
-	//D: 59.00 Mbps
-	//D: 64.00 Mbps
-	//F: D: 60.00 Mbps
+//So a speedtest from fast.com could look like this
+//Site: Fast
+//Supports: D F
+//D: 16.00 Kbps
+//D: 16.00 Kbps
+//D: 88.00 Kbps
+//D: 280.00 Kbps
+//D: 560.00 Kbps
+//D: 560.00 Kbps
+//D: 2.60 Mbps
+//D: 2.60 Mbps
+//D: 5.90 Mbps
+//D: 9.90 Mbps
+//D: 14.00 Mbps
+//D: 21.00 Mbps
+//D: 38.00 Mbps
+//D: 59.00 Mbps
+//D: 64.00 Mbps
+//F: D: 60.00 Mbps
 
 
-//@TODO Make output file consistent accross all speedtests
-	//Sites that use new standard: Fast.com, Google.com, Bandwidthplace.com
-//@TODO Make first line of file what the site is and the second flag what kind of support to expect
-	//Sites that use new standard: Fast.com, Google.com, Bandwidthplace.com
-//@TODO Look at which ISP websites can be implemented
-	//No because flash: Spectrum/Charter/Time Warner, Armstrong,
-	//No: Optimum/Cablevision (Requires they are your isp)
-	//Yes: AT&T, Verizon (Have to watch display type for switching and stopping), XFINITY
 //@TODO Decide on a new fallback for Google that has the same feature set
 //@TODO Fine tune refresh speeds per site
-	//Sites that are fine turned:
+//Sites that are fine turned:
 //@TODO Add fatal error catching (Possibly add timeout too?)
 //@TODO Fix bandwidthplace sometimes getting ping stuck (Reset connection after so too long pinging (Note I have no way of knowing ping till it is done), maybe 5 seconds?)
-	//Note sometimes it seems like it is stuck but it is not since it seems they run multiple pings
+//Note sometimes it seems like it is stuck but it is not since it seems they run multiple pings
 //@TODO Sites to add support for:
-	//beta.speedtest.net (Again)
+//Verizon, beta.speedtest.net (Canvas extract)
 
 if (system.args.length > 1) {
 	address = system.args[1].toLowerCase();
@@ -82,6 +74,19 @@ if (system.args.length > 1) {
 	}
 	else if (address == "bandwidthplace" || address == "place" || address == "bandwidth") {
 		address = "http://www.bandwidthplace.com/";
+	}
+	else if (address == "at&t" || address == "at" || address == "att" || address == "atandt") {
+		console.log("at&t blocks phantomjs, switching to google");
+		address = "https://www.google.com/search?q=speedtest";
+		address = "http://speedtest.att.com/speedtest/";
+	}
+	else if (address == "verizon" || address == "fios") {
+		address = "https://www.verizon.com/speedtest/";
+	}
+	else if (address == "comcast" || address == "xfinity") {
+		console.log("Comcast (Fuck Comcast btw) blocks phantomjs, switching to google");
+		address = "https://www.google.com/search?q=speedtest";
+		//address = "http://speedtest.xfinity.com/";
 	}
 	else if (address == "speedtest" || address == "betaspeedtest" || address == "speedtestbeta") {
 		console.log("speedtest.net only gives final output data and is unreliable and unimplemented, switching to google");
@@ -124,18 +129,27 @@ page.open(address, function(status) {
 		else if (address == "https://fast.com/") {
 			runSpeedtestFast();
 		}
-		else if (address == "http://speedof.me/") {
-			runSpeedtestSpeedof();
-		}
+		//else if (address == "http://speedof.me/") {
+		//	runSpeedtestSpeedof();
+		//}
 		else if (address == "http://www.bandwidthplace.com/") {
 			runSpeedtestBandwidthplace();
 		}
-		else if (address == "http://beta.speedtest.net/") {
-			runSpeedtestSpeedtestBeta();
+		//else if (address == "http://beta.speedtest.net/") {
+		//	runSpeedtestSpeedtestBeta();
+		//}
+		else if (address == "http://speedtest.att.com/speedtest/") {
+			runSpeedtestATandT();
+		}
+		else if (address == "https://www.verizon.com/speedtest/") {
+			runSpeedtestVerizon();
+		}
+		else if (address == "http://speedtest.xfinity.com/") {
+			runSpeedtestComcast();
 		}
 		else {
 			fs.write("output.txt", "Unsupported speedtest website " + address + "\n", 'w');
-			fs.write("output.txt", "P: " + "-1" + " D:" + "-1" + " U:" + "-1\n", 'a');
+			fs.write("output.txt", "P: " + "-1" + " D:" + "-1" + " U:" + "-1", 'a');
 		}
 	}
 });
@@ -170,6 +184,8 @@ function runSpeedtestGoogle() {
 		updater = setInterval(updateSpeedtestDataGoogle, 150);
 	}
 	else {
+
+		console.log("Google speedtest unsupported in your contry, switching to fallback");
 		//Run in 100ms so that way the connection to google has time to close
 		setTimeout(runSpeedtestFast, 100);
 	}
@@ -294,6 +310,8 @@ function finalSpeedtestDataFast(speed, units) {
 //**********************************************************************************
 //DONT CALL THESE FUNCTIONS, SPEEDOF SEEMS TO SELL AND API AND THUS BLOCKS PHANTOMJS
 //**********************************************************************************
+//@TODO Find a way around speedof's phantomjs block
+
 function switchToSpeedof() {
 	address = "http://speedof.me/";
 	page.open(address, function(status) {
@@ -456,8 +474,7 @@ function finalSpeedtestDataBandwidthplace() {
 ██████  ███████    ██    ██   ██ ██ ███████ ██      ███████ ███████ ██████     ██    ███████ ███████    ██
 */
 
-//@TODO Implement beta.speedtest.com and either find a way to get the number out of the canvas without the need for OCR or decide on how it should be outputed
-
+//@TODO Since beta.speedtest.com hides curent data in a canvas, until I can find a way to get it support is shelved
 
 /*
 ██ ███████ ██████      ███████ ██████  ███████ ███████ ██████  ████████ ███████ ███████ ████████ ███████
@@ -467,7 +484,191 @@ function finalSpeedtestDataBandwidthplace() {
 ██ ███████ ██          ███████ ██      ███████ ███████ ██████     ██    ███████ ███████    ██    ███████
 */
 
+/*
+ █████  ████████ ██ ████████
+██   ██    ██    ██    ██
+███████    ██ ████████ ██
+██   ██    ██ ██  ██   ██
+██   ██    ██ ██████   ██
+*/
 
+//@TODO Find a way around AT&T's block (Seems to load some scripts then fail so its a different method)
+
+function switchToATandT() {
+	address = "http://speedtest.att.com/speedtest/";
+	page.open(address, function(status) {
+		if (status !== "success") {
+			fs.write("output.txt", "Check internet connection to http://speedtest.att.com/speedtest/\n", 'w');
+			fs.write("output.txt", "F: P: " + "-1 " + "D: " + "-1 " + "U: " + "-1", 'a');
+			phantom.exit();
+		}
+		else {
+			runSpeedtestATandT();
+		}
+	});
+}
+
+function runSpeedtestATandT() {
+	console.log("ATandT");
+	fs.write("output.txt", "Site: ATandT\nSupports: P U D F\n", 'w');
+
+	page.evaluate(function() {
+		var a = document.getElementById("DRWidgetInitiate");
+		var e = document.createEvent('MouseEvents');
+		e.initMouseEvent('click', true, true, window, 0, 0, 0, 0, 0, false, false, false, false, 0, null);
+		a.dispatchEvent(e);
+	});
+
+	updater = setInterval(updateSpeedtestDataATandT, 150);
+
+}
+
+function updateSpeedtestDataATandT() {
+	//AT&T uses and SVG group to show data with dynamic IDs use document.getElementById("highcharts-0").innerText and split
+
+	var info = page.evaluate(function() {
+		return document.getElementById("highcharts-0").innerText.split("\n");
+	});
+	//Order of info through the test
+	//["THROUGHPUT", "PERFORMING", "SPEEDTEST", "LATENCY", "UPLOAD", "PERFORMING", "SPEEDTEST", "LATENCY", "32", "ms", "LATENCY", ""]
+	//["THROUGHPUT", "PERFORMING", "SPEEDTEST", "DOWNLOAD", "UPLOAD", "PERFORMING", "SPEEDTEST", "70.13", "DOWNLOAD", "Mbps", "DOWNLOAD", "00.2M0.5M1M3M6M12M24M50M100M210M"]
+	//["THROUGHPUT", "PERFORMING", "SPEEDTEST", "UPLOAD", "PERFORMING", "SPEEDTEST", "47.8", "DOWNLOAD", "Mbps", "UPLOAD", "Mbps", "7.06", "UPLOAD", "00.2M0.5M1M3M6M12M24M50M100M210M"]
+	//["THROUGHPUT", "PERFORMING", "SPEEDTEST", "READY", "UPLOAD", "Mbps", "6.6", "DOWNLOAD", "Mbps", "47.8", ""]
+
+	//writeCurrPageToFile();
+
+	if (info[4] === "DOWNLOAD") {
+		fs.write("output.txt", "D: " + (Math.round(info[7] * 100) / 100).toFixed(2) + " " + info[9] + "\n", 'a');
+	}
+	else if (info[4] === "UPLOAD") {
+		fs.write("output.txt", "U: " + (Math.round(info[11] * 100) / 100).toFixed(2) + " " + info[10] + "\n", 'a');
+	}
+	else if (info[4] === "READY") {
+		clearInterval(updater);
+		finalSpeedtestDataATandT();
+	}
+}
+
+function finalSpeedtestDataATandT() {
+
+	//Final results are in a giant table and the download has no label, use document.getElementById("speed").innerText then split by line
+	//Loc[0] is download line, Loc[1] is upload line, Loc[2] is ping line
+	var results = page.evaluate(function() {
+		return document.getElementById("speed").innerText.split("\n");
+	});
+
+	fs.write("output.txt", "F: P:" + results[2].replace("Latency   ", "") + " D: " + results[0].split(" ")[4] + " " + results[0].split(" ")[5] + " U: " + results[1].split(" ")[4] + " " + results[1].split(" ")[5], 'a');
+	phantom.exit();
+}
+
+/*
+██    ██ ███████ ██████  ██ ███████  ██████  ███    ██
+██    ██ ██      ██   ██ ██    ███  ██    ██ ████   ██
+██    ██ █████   ██████  ██   ███   ██    ██ ██ ██  ██
+ ██  ██  ██      ██   ██ ██  ███    ██    ██ ██  ██ ██
+  ████   ███████ ██   ██ ██ ███████  ██████  ██   ████
+*/
+
+function switchToVerizon() {
+	address = "https://www.verizon.com/speedtest/";
+	page.open(address, function(status) {
+		if (status !== "success") {
+			fs.write("output.txt", "Check internet connection to https://www.verizon.com/speedtest/\n", 'w');
+			fs.write("output.txt", "F: P: " + "-1 " + "D: " + "-1 " + "U: " + "-1", 'a');
+			phantom.exit();
+		}
+		else {
+			runSpeedtestVerizon();
+		}
+	});
+}
+
+function runSpeedtestVerizon() {
+	console.log("Verizon");
+	fs.write("output.txt", "Site: Verizon\nSupports: P U D F\n", 'w');
+writeCurrPageToFile();
+	page.evaluate(function() {
+		var a = document.getElementById("startButton");
+		//var a = document.getElementById("start-router-test-button");
+		var e = document.createEvent('MouseEvents');
+		e.initMouseEvent('click', true, true, window, 0, 0, 0, 0, 0, false, false, false, false, 0, null);
+		a.dispatchEvent(e);
+	});
+
+	updater = setInterval(updateSpeedtestDataVerizon, 150);
+
+}
+
+function updateSpeedtestDataVerizon() {
+
+	//Verizon does not ID anything in their speedtest
+	var info = page.evaluate(function() {
+		return document.getElementById("the-speedtest-meter").innerText.split("\n");
+	});
+	//                                                                                                                                                                                      Loc[36]=1Gig
+	//["0", "·", "·", "·", "·", "|", "·", "·", "·", "20", "·", "·", "·", "·", "|", "·", "·", "·", "75", "·", "·", "·", "·", "|", "·", "·", "·", "400", "·", "·", "·", "·", "|", "·", "·", "·", "1Gig", "Mbps", "DOWNLOAD", "19", ".", "50", ""]
+	//["0", "·", "·", "·", "·", "|", "·", "·", "·", "20", "·", "·", "·", "·", "|", "·", "·", "·", "75", "·", "·", "·", "·", "|", "·", "·", "·", "400", "·", "·", "·", "·", "|", "·", "·", "·", "1Gig", "Mbps", "UPLOAD", "6", ".", "68", ""]
+	//["0", "·", "·", "·", "·", "|", "·", "·", "·", "20", "·", "·", "·", "·", "|", "·", "·", "·", "75", "·", "·", "·", "·", "|", "·", "·", "·", "400", "·", "·", "·", "·", "|", "·", "·", "·", "1Gig", ""]
+
+	writeCurrPageToFile();
+
+	//Check if done first to prevent outofbounds error
+	if (info[37] === "") {
+		clearInterval(updater);
+		finalSpeedtestDataVerizon();
+	}
+	else if (info[38] === "DOWNLOAD") {
+		var speedDown = info[38] + info[39] + info[40];
+		fs.write("output.txt", "D: " + (Math.round(speedDown * 100) / 100).toFixed(2) + " " + info[37] + "\n", 'a');
+	}
+	else if (info[38] === "UPLOAD") {
+		var speedUp = info[38] + info[39] + info[40];
+		fs.write("output.txt", "U: " + (Math.round(speedUp * 100) / 100).toFixed(2) + " " + info[37] + "\n", 'a');
+	}
+}
+
+function finalSpeedtestDataVerizon() {
+
+	//Verizon seems to have support for ping in the page but not support it but this is where it would go
+	//var ping = page.evaluate(function() {
+	//	return document.getElementById("results-ping");
+	//});
+	//var pingUnits = page.evaluate(function() {
+	//	return document.getElementsByClassName("value-type")[2];
+	//});
+
+	var ping = page.evaluate(function() {
+		//Lol verizon thats not an int
+		return document.getElementsByClassName("test-value")[0].innerText.replace("										", "").replace("										", "").split("\n");
+	});
+	var download = page.evaluate(function() {
+		//Lol verizon thats not an int
+		return document.getElementById("results-download-int");
+	});
+	var downloadUnits = page.evaluate(function() {
+		return document.getElementsByClassName("value-type")[0];
+	});
+	var upload = page.evaluate(function() {
+		//Lol verizon thats not an int
+		return document.getElementById("results-upload-int");
+	});
+	var uploadUnits = page.evaluate(function() {
+		return document.getElementsByClassName("value-type")[1];
+	});
+
+	fs.write("output.txt", "F: P:" + ping[1] + " " + ping[2] + " D: " +  download + " " + downloadUnits + " U: " + upload + " " + uploadUnits, 'a');
+	phantom.exit();
+}
+
+/*
+ ██████  ██████  ███    ███  ██████  █████  ███████ ████████
+██      ██    ██ ████  ████ ██      ██   ██ ██         ██
+██      ██    ██ ██ ████ ██ ██      ███████ ███████    ██
+██      ██    ██ ██  ██  ██ ██      ██   ██      ██    ██
+ ██████  ██████  ██      ██  ██████ ██   ██ ███████    ██
+*/
+
+//@TODO Find a way around Comcast's phantomjs block (Seems to be the same as speedofme)
 
 
 function writeCurrPageToFile() {
