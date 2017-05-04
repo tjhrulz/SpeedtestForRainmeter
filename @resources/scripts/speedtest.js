@@ -2,12 +2,58 @@ var page = require("webpage").create();
 var fs = require('fs');
 var system = require('system');
 
+
+//Copyright (C) 2017 Trevor Hamilton
+//To anyone wanting to use this script for rainmeter speedtest skins you are freely allowed to do use and modify it without asking
+//I would ask that you credit me for helping you and that you feel free to send any issues you have or help you need my way
+
+//@Inputs: An argument of either the shorthand or the full speedtest site url
+	//Supported nicknames and full URL:
+	//Google https://www.google.com/search?q=speedtest
+	//Bandwidthplace http://www.bandwidthplace.com/
+	//Netflix or Fast https://fast.com/
+	//Speedtestbeta http://beta.speedtest.net/
+//@Outputs: One output.txt formatted as follows, D and U row length is not fixed and the file is updated in real time
+	//Site: #SiteNickname#
+	//Supports: P D U F
+	//D: #Speed# #Units#
+	//D: #Speed# #Units#
+	//D: #Speed# #Units#
+	//U: #Speed# #Units#
+	//U: #Speed# #Units#
+	//U: #Speed# #Units#
+	//U: #Speed# #Units#
+	//F: P: #Ping# ms D: #Speed# #Units# U: #Speed# #Units#
+
+	//So a speedtest from fast.com could look like this
+	//Site: Fast
+	//Supports: D F
+	//D: 16.00 Kbps
+	//D: 16.00 Kbps
+	//D: 88.00 Kbps
+	//D: 280.00 Kbps
+	//D: 560.00 Kbps
+	//D: 560.00 Kbps
+	//D: 2.60 Mbps
+	//D: 2.60 Mbps
+	//D: 5.90 Mbps
+	//D: 9.90 Mbps
+	//D: 14.00 Mbps
+	//D: 21.00 Mbps
+	//D: 38.00 Mbps
+	//D: 59.00 Mbps
+	//D: 64.00 Mbps
+	//F: D: 60.00 Mbps
+
+
 //@TODO Make output file consistent accross all speedtests
 	//Sites that use new standard: Fast.com, Google.com, Bandwidthplace.com
 //@TODO Make first line of file what the site is and the second flag what kind of support to expect
 	//Sites that use new standard: Fast.com, Google.com, Bandwidthplace.com
-//@TODO Decide if I wan to support ISP based speedtests?
-	//Decided I will but it seems most use flash, need to sit and go through them and add to the support todo
+//@TODO Look at which ISP websites can be implemented
+	//No because flash: Spectrum/Charter/Time Warner, Armstrong,
+	//No: Optimum/Cablevision (Requires they are your isp)
+	//Yes: AT&T, Verizon (Have to watch display type for switching and stopping), XFINITY
 //@TODO Decide on a new fallback for Google that has the same feature set
 //@TODO Fine tune refresh speeds per site
 	//Sites that are fine turned:
@@ -37,6 +83,11 @@ if (system.args.length > 1) {
 	else if (address == "bandwidthplace" || address == "place" || address == "bandwidth") {
 		address = "http://www.bandwidthplace.com/";
 	}
+	else if (address == "speedtest" || address == "betaspeedtest" || address == "speedtestbeta") {
+		console.log("speedtest.net only gives final output data and is unreliable and unimplemented, switching to google");
+		address = "https://www.google.com/search?q=speedtest";
+		//address = "http://beta.speedtest.net/";
+	}
 	else if (address.substring(0, 8) !== "https://" && address.substring(0, 7) !== "http://") {
 		address = "http://" + address;
 	}
@@ -60,7 +111,7 @@ page.open(address, function(status) {
 
 	if (status !== "success") {
 		fs.write("output.txt", "Check internet connection to " + address + "\n", 'w');
-		fs.write("output.txt", "P:" + "-1" + " D:" + "-1" + " U:" + "-1\n", 'a');
+		fs.write("output.txt", "P: " + "-1 " + "D: " + "-1 " + "U: " + "-1", 'a');
 		phantom.exit();
 	}
 	else {
@@ -79,9 +130,12 @@ page.open(address, function(status) {
 		else if (address == "http://www.bandwidthplace.com/") {
 			runSpeedtestBandwidthplace();
 		}
+		else if (address == "http://beta.speedtest.net/") {
+			runSpeedtestSpeedtestBeta();
+		}
 		else {
 			fs.write("output.txt", "Unsupported speedtest website " + address + "\n", 'w');
-			fs.write("output.txt", "P:" + "-1" + " D:" + "-1" + " U:" + "-1\n", 'a');
+			fs.write("output.txt", "P: " + "-1" + " D:" + "-1" + " U:" + "-1\n", 'a');
 		}
 	}
 });
@@ -166,7 +220,7 @@ function finalSpeedtestDataGoogle() {
 	});
 
 	//Loc[0] is speed Loc[1] is units
-	fs.write("output.txt", "F: P:" + ping + " D: " + download[0] + " " + download[1] + " U: " + upload[0] + " " + upload[1], 'a');
+	fs.write("output.txt", "F: P: " + ping + " D: " + download[0] + " " + download[1] + " U: " + upload[0] + " " + upload[1], 'a');
 	phantom.exit();
 }
 
@@ -183,7 +237,7 @@ function switchToFast() {
 	page.open(address, function(status) {
 		if (status !== "success") {
 			fs.write("output.txt", "Check internet connection to https://fast.com/\n", 'w');
-			fs.write("output.txt", "P:" + "-1" + " D:" + "-1" + " U:" + "-1\n", 'a');
+			fs.write("output.txt", "P: " + "-1 " + "D: " + "-1 " + "U: " + "-1", 'a');
 			phantom.exit();
 		}
 		else {
@@ -245,7 +299,7 @@ function switchToSpeedof() {
 	page.open(address, function(status) {
 		if (status !== "success") {
 			fs.write("output.txt", "Check internet connection to http://speedof.me/\n", 'w');
-			fs.write("output.txt", "P:" + "-1" + " D:" + "-1" + " U:" + "-1\n", 'a');
+			fs.write("output.txt", "P: " + "-1 " + "D: " + "-1 " + "U: " + "-1", 'a');
 			phantom.exit();
 		}
 		else {
@@ -328,7 +382,7 @@ function switchToBandwidthplace() {
 	page.open(address, function(status) {
 		if (status !== "success") {
 			fs.write("output.txt", "Check internet connection to http://www.bandwidthplace.com/\n", 'w');
-			fs.write("output.txt", "P:" + "-1" + " D:" + "-1" + " U:" + "-1\n", 'a');
+			fs.write("output.txt", "P: " + "-1 " + "D: " + "-1 " + "U: " + "-1", 'a');
 			phantom.exit();
 		}
 		else {
@@ -390,9 +444,31 @@ function finalSpeedtestDataBandwidthplace() {
 		return document.getElementById("upload").innerText.replace("Upload", "").split("\n");
 	});
 
-	fs.write("output.txt", "F: P:" + ping[1] + " " + ping[2] + " D:" + download[1] + " " + download[2] + " U:" + upload[1] + " " + upload[2] + "\n", 'a');
+	fs.write("output.txt", "F: P:" + ping[1] + " " + ping[2] + " D: " + download[1] + " " + download[2] + " U: " + upload[1] + " " + upload[2], 'a');
 	phantom.exit();
 }
+
+/*
+██████  ███████ ████████  █████     ███████ ██████  ███████ ███████ ██████  ████████ ███████ ███████ ████████
+██   ██ ██         ██    ██   ██    ██      ██   ██ ██      ██      ██   ██    ██    ██      ██         ██
+██████  █████      ██    ███████    ███████ ██████  █████   █████   ██   ██    ██    █████   ███████    ██
+██   ██ ██         ██    ██   ██         ██ ██      ██      ██      ██   ██    ██    ██           ██    ██
+██████  ███████    ██    ██   ██ ██ ███████ ██      ███████ ███████ ██████     ██    ███████ ███████    ██
+*/
+
+//@TODO Implement beta.speedtest.com and either find a way to get the number out of the canvas without the need for OCR or decide on how it should be outputed
+
+
+/*
+██ ███████ ██████      ███████ ██████  ███████ ███████ ██████  ████████ ███████ ███████ ████████ ███████
+██ ██      ██   ██     ██      ██   ██ ██      ██      ██   ██    ██    ██      ██         ██    ██
+██ ███████ ██████      ███████ ██████  █████   █████   ██   ██    ██    █████   ███████    ██    ███████
+██      ██ ██               ██ ██      ██      ██      ██   ██    ██    ██           ██    ██         ██
+██ ███████ ██          ███████ ██      ███████ ███████ ██████     ██    ███████ ███████    ██    ███████
+*/
+
+
+
 
 function writeCurrPageToFile() {
 	fs.write(outputCount + "output.html", page.evaluate(function() {
