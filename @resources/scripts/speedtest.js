@@ -116,7 +116,7 @@ page.open(address, function(status) {
 
 	if (status !== "success") {
 		fs.write("output.txt", "Check internet connection to " + address + "\n", 'w');
-		fs.write("output.txt", "F: P: " + "-1 " + "D: " + "-1 " + "U: " + "-1", 'a');
+		fs.write("output.txt", "F: P: " + "-1 error " + "D: " + "-1 error " + "U: " + "-1  error\n", 'a');
 		phantom.exit();
 	}
 	else {
@@ -149,7 +149,7 @@ page.open(address, function(status) {
 		}
 		else {
 			fs.write("output.txt", "Unsupported speedtest website " + address + "\n", 'w');
-			fs.write("output.txt", "P: " + "-1" + " D:" + "-1" + " U:" + "-1", 'a');
+			fs.write("output.txt", "F: P: " + "-1 error " + "D: " + "-1 error " + "U: " + "-1  error\n", 'a');
 		}
 	}
 });
@@ -253,7 +253,7 @@ function switchToFast() {
 	page.open(address, function(status) {
 		if (status !== "success") {
 			fs.write("output.txt", "Check internet connection to https://fast.com/\n", 'w');
-			fs.write("output.txt", "F: D: " + "-1 ", 'a');
+			fs.write("output.txt", "F: D: " + "-1 error\n", 'a');
 			phantom.exit();
 		}
 		else {
@@ -317,7 +317,7 @@ function switchToSpeedof() {
 	page.open(address, function(status) {
 		if (status !== "success") {
 			fs.write("output.txt", "Check internet connection to http://speedof.me/\n", 'w');
-			fs.write("output.txt", "F: P: " + "-1 " + "D: " + "-1 " + "U: " + "-1", 'a');
+			fs.write("output.txt", "F: P: " + "-1 error " + "D: " + "-1 error " + "U: " + "-1  error\n", 'a');
 			phantom.exit();
 		}
 		else {
@@ -379,7 +379,7 @@ function updateSpeedtestDataSpeedof() {
 
 function finalSpeedtestDataSpeedof(downloadSpeed, downloadSize, uploadSpeed, uploadSize) {
 
-	fs.write("output.txt", "P:" + "-1" + " D:" + downloadSpeed + downloadSize + " U:" + uploadSpeed + uploadSize + "\n", 'a');
+	fs.write("output.txt", "F: D: " + downloadSpeed + downloadSize + " U: " + uploadSpeed + uploadSize + "\n", 'a');
 	phantom.exit();
 }
 
@@ -400,7 +400,7 @@ function switchToBandwidthplace() {
 	page.open(address, function(status) {
 		if (status !== "success") {
 			fs.write("output.txt", "Check internet connection to http://www.bandwidthplace.com/\n", 'w');
-			fs.write("output.txt", "F: P: " + "-1 " + "D: " + "-1 " + "U: " + "-1", 'a');
+			fs.write("output.txt", "F: P: " + "-1 error " + "D: " + "-1 error " + "U: " + "-1  error\n", 'a');
 			phantom.exit();
 		}
 		else {
@@ -462,7 +462,7 @@ function finalSpeedtestDataBandwidthplace() {
 		return document.getElementById("upload").innerText.replace("Upload", "").split("\n");
 	});
 
-	fs.write("output.txt", "F: P:" + ping[1] + " " + ping[2] + " D: " + download[1] + " " + download[2] + " U: " + upload[1] + " " + upload[2], 'a');
+	fs.write("output.txt", "F: P: " + ping[1] + " " + ping[2] + " D: " + download[1] + " " + download[2] + " U: " + upload[1] + " " + upload[2], 'a');
 	phantom.exit();
 }
 
@@ -499,7 +499,7 @@ function switchToATandT() {
 	page.open(address, function(status) {
 		if (status !== "success") {
 			fs.write("output.txt", "Check internet connection to http://speedtest.att.com/speedtest/\n", 'w');
-			fs.write("output.txt", "F: P: " + "-1 " + "D: " + "-1 " + "U: " + "-1", 'a');
+			fs.write("output.txt", "F: P: " + "-1 error " + "D: " + "-1 error " + "U: " + "-1  error\n", 'a');
 			phantom.exit();
 		}
 		else {
@@ -574,7 +574,7 @@ function switchToVerizon() {
 	page.open(address, function(status) {
 		if (status !== "success") {
 			fs.write("output.txt", "Check internet connection to https://www.verizon.com/speedtest/\n", 'w');
-			fs.write("output.txt", "F: P: " + "-1 " + "D: " + "-1 " + "U: " + "-1", 'a');
+			fs.write("output.txt", "F: P: " + "-1 error " + "D: " + "-1 error " + "U: " + "-1  error\n", 'a');
 			phantom.exit();
 		}
 		else {
@@ -656,7 +656,7 @@ function finalSpeedtestDataVerizon() {
 		return document.getElementsByClassName("value-type")[1];
 	});
 
-	fs.write("output.txt", "F: P:" + ping[1] + " " + ping[2] + " D: " +  download + " " + downloadUnits + " U: " + upload + " " + uploadUnits, 'a');
+	fs.write("output.txt", "F: P: " + ping[1] + " " + ping[2] + " D: " +  download + " " + downloadUnits + " U: " + upload + " " + uploadUnits, 'a');
 	phantom.exit();
 }
 
