@@ -4,11 +4,13 @@ function clearoutput()
 	file:close()
 end
 
-timing,timing2,timing3,timing4,timing5,timing6,timing7 = -1,0,0,0,0,0,0
+timing,timing2,timing3,timing4,timing5,timing6,timing7,timing8 = -1,0,0,0,0,0,0,-1
 percent = 0
 reading = false
 thereError = false
+connected = false
 curMeasure = "Welcome"
+storeFinal = {}
 color={"default","fast","google","speedof","bandwidthplace","xfinity","atandt","comcast","verizon"}
 color.default		= {['sR'] = 011, ['sG'] = 018, ['sB'] = 031}
 color.fast			= {['sR'] = 229, ['sG'] = 009, ['sB'] = 020, ['lH1'] = 'cb2d3e', ['lH2'] = 'ef473a'}
@@ -40,6 +42,14 @@ function Update()
 		file:close()
 		oSite = contents:match("Site:%s(%w+)")
 
+		if oSite ~= nil and not connected then --Connect success trigger
+			sbg('SetOption StatusIcon Text ','SetOption Welcome Text connected')
+			statuscolor = "57,213,57"
+			timing = 0
+			timing4 = 1
+			connected = true
+		end
+
 		for measure,speed,unit in string.gmatch(contents,"\n([PUD]):%s(.-)%s(%w+)\n") do
 			table.insert(measures,measure)
 			table.insert(speeds,speed)
@@ -62,15 +72,19 @@ function Update()
 			for finalN,finalV in string.gmatch(finalDetail,"(.):%s(.-%s%w+)") do
 				if finalV == '-1 error' then
 					reading = false
-					thereError = true
-					timing = 1
+					sbg('SetOption StatusIcon Text ','SetOption Welcome Text \"refresh and try again\"')
+					statuscolor = "255,216,1"
+					timing = 0
+					timing4 = 1
 					return
 				end
+
+				storeFinal[finalN] = finalV
 
 				sbg('SetOption '..finalN..' FontSize 14',
 					'SetOption '..finalN..'Icon FontSize 16',
 					'SetOptionGroup '..finalN..' FontColor \"255,255,255,(255*#*final*#)\"',
-					'SetOptionGroup '..finalN..' Y \"(60*#*final*#-31)\"',
+					'SetOptionGroup '..finalN..' Y \"(60*#*final*#-30)\"',
 					'SetOption '..finalN..'Icon X 15R',
 					'SetOption '..finalN..' X 5R',
 					'SetOPtion '..finalN..' Text \"'..finalV..'\"')
@@ -83,7 +97,7 @@ function Update()
 			dGY = SKIN:GetMeter('DGraph'):GetY()
 			pGY = SKIN:GetMeter('PGraph'):GetY()
 			reading = false
-			sbg('SetOption Stop Text ','UpdateMeter Stop') --Change to tick symbol
+			sbg('SetOption Stop Text ','UpdateMeter Stop','ShowMeter Share') --Change to Restart symbol, show Share button
 			timing2=0
 			timing3=1
 			timing7=1
@@ -102,14 +116,9 @@ function Update()
 
 	if timing > 0 and timing < 100 then --flickering text
 		timing=timing+1
-		sbg('SetOption Welcome FontColor 255,255,255,'..255*timing/20)
-		if thereError then
-			sbg('SetOption Welcome Text \"error, refresh and try again\"',
-				'UpdateMeter Welcome')
-		else
-			sbg('SetOption Welcome Text \"please wait...\"',
-				'UpdateMeter Welcome')
-		end
+		sbg('SetOption Welcome FontColor 255,255,255,'..255*timing/20,
+			'SetOption Welcome Text \"please wait...\"',
+			'UpdateMeter Welcome')
 	elseif timing == 100 then
 		timing = 1
 	elseif timing == 0 then
@@ -133,16 +142,14 @@ function Update()
 	elseif timing3 == 10 then
 		sbg('SetVariable percent 1','UpdateMeter LoadingBar')
 		timing3 = 11
-		timing4 = 1
 	end
 
-	if timing4 > 0 and timing4 < 50 then
+	if timing4 > 0 and timing4 < 50 then --Status announce
 		timing4 = timing4 + 1
-		sbg('SetOptionGroup M InlineSetting3 \"Shadow|0|0|'..(5*timing4/50)..'|000000\"',
-			'UpdateMeterGroup M')
+		moveoverAnimate=outQuart(timing4,0,1,50)
+		sbg('SetOption Welcome X '..40+35*moveoverAnimate,'SetOption StatusIcon FontColor '..statuscolor..','..255*moveoverAnimate,'UpdateMeter Welcome','UpdateMeter StatusIcon')
 	elseif timing4 == 50 then
 		timing4 = 51
-		sbg('SetOption Stop Text ','UpdateMeter Stop','ShowMeter Share') --Change to Restart symbol
 	end
 
 	if timing5 > 0 and timing5 < 20 then --Change Sites color
@@ -179,15 +186,29 @@ function Update()
 
 	if timing7 > 0 and timing7 < 40 then --Final result out
 		timing7 = timing7 + 1
-		slideoutAnimate = outQuart(timing7,0,1,40)
+		slideoutAnimate = inCubic(timing7,0,1,40)
 		sbg('SetVariable final '..slideoutAnimate,'UpdateMeterGroup F',
 			'SetOption UGraph Y '..uGY-50*slideoutAnimate,
 			'SetOption DGraph Y '..dGY-50*slideoutAnimate,
 			'SetOption PGraph Y '..pGY-50*slideoutAnimate,
 			'UpdateMeterGroup G')
 	elseif timing7 == 40 then
-		sbg('SetOptionGroup M ClipStringW 100','SetOptionGroup M ClipString 2','SetVariable final 1','UpdateMeterGroup F')
+		sbg('SetOption U LeftMouseUpAction \"[!CommandMeasure Script convertMeter=\'U\';dir=1;timing8=1]\"','SetOption D LeftMouseUpAction \"[!CommandMeasure Script convertMeter=\'D\';dir=1;timing8=1]\"','SetOption P LeftMouseUpAction \"[!SetOption P TooltipText Really?][!UpdateMeter P]\"','UpdateMeterGroup F')
 		timing7 = 41
+	end
+
+	if timing8 > 0 and timing8 < 15 then
+		timing8 = timing8 + 1*dir
+		fadingAnimate = outQuart(timing8,0,1,15)
+		sbg('SetOption U LeftMouseUpAction \" \"','SetOption D LeftMouseUpAction \" \"','UpdateMeter U','UpdateMeter D')
+		sbg('SetOption '..convertMeter..' FontColor 255,2555,255,'..(255-255*fadingAnimate)..')')
+	elseif timing8 == 15 then
+		sbg('SetOption '..convertMeter..' Text \"'..convert(convertMeter)..'\"','UpdateMeter '..convertMeter)
+		dir = -1
+		timing8 = 14
+	elseif timing8 == 0 then
+		sbg('SetOption U LeftMouseUpAction \"[!CommandMeasure Script convertMeter=\'U\';dir=1;timing8=1]\"','SetOption D LeftMouseUpAction \"[!CommandMeasure Script convertMeter=\'D\';dir=1;timing8=1]\"','UpdateMeter U','UpdateMeter D')
+		timing8 = -1
 	end
 end
 
@@ -254,6 +275,21 @@ function changesite(s)
 	timing5 = 1
 end
 
+function convert(t)
+	local value,unit = string.match(SKIN:GetMeter(t):GetOption('Text'),"(.-)%s(.*)$")
+	if unit == 'KB/s' or unit == 'MB/s' then
+		return storeFinal[t]
+	end
+	if unit == 'Kbps' then
+		value = value / 8 
+		unit = 'KB/s'
+	elseif unit == 'Mbps' then
+		value = value / 8
+		unit = 'MB/s'
+	end
+	return round(value,2)..' '..unit
+end
+
 function outElastic(t, b, c, d, a, p)
   if t == 0 then return b end
 
@@ -278,4 +314,14 @@ end
 function outQuart(t, b, c, d)
   t = t / d - 1
   return -c * (math.pow(t, 4) - 1) + b
+end
+
+function inCubic(t, b, c, d)
+  t = t / d
+  return c * math.pow(t, 3) + b
+end
+
+function round(num, numDecimalPlaces)
+	local mult = 10^(numDecimalPlaces or 0)
+	return math.floor(num * mult + 0.5) / mult
 end
