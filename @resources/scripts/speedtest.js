@@ -105,18 +105,18 @@ else {
 console.log(address);
 var outputCount = 0;
 
-page.viewportSize = {
-	width: 480,
-	height: 800
-};
-page.settings.userAgent = "Mozilla/5.0 (Linux; Android 5.1.1; Nexus 5 Build/LMY48B; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/43.0.2357.65 Mobile Safari/537.36";
+//page.viewportSize = {
+//	width: 480,
+//	height: 800
+//};
+//page.settings.userAgent = "Mozilla/5.0 (Linux; Android 5.1.1; Nexus 5 Build/LMY48B; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/43.0.2357.65 Mobile Safari/537.36";
 
 page.open(address, function(status) {
 	console.log(status);
 
 	if (status !== "success") {
 		fs.write("output.txt", "Check internet connection to " + address + "\n", 'w');
-		fs.write("output.txt", "F: P: " + "-1 error " + "D: " + "-1 error " + "U: " + "-1  error\n", 'a');
+		fs.write("output.txt", "F: P: " + "-1 error " + "D: " + "-1 error " + "U: " + "-1 error" + "\n", 'a');
 		phantom.exit();
 	}
 	else {
@@ -149,7 +149,7 @@ page.open(address, function(status) {
 		}
 		else {
 			fs.write("output.txt", "Unsupported speedtest website " + address + "\n", 'w');
-			fs.write("output.txt", "F: P: " + "-1 error " + "D: " + "-1 error " + "U: " + "-1  error\n", 'a');
+			fs.write("output.txt", "P: " + "-1 error" + " D:" + "-1 error" + " U:" + "-1 error", 'a');
 		}
 	}
 });
@@ -236,7 +236,7 @@ function finalSpeedtestDataGoogle() {
 	});
 
 	//Loc[0] is speed Loc[1] is units
-	fs.write("output.txt", "F: P: " + ping + " D: " + download[0] + " " + download[1] + " U: " + upload[0] + " " + upload[1], 'a');
+	fs.write("output.txt", "F: P: " + ping + " D: " + download[0] + " " + download[1] + " U: " + upload[0] + " " + upload[1] + "\n", 'a');
 	phantom.exit();
 }
 
@@ -253,7 +253,7 @@ function switchToFast() {
 	page.open(address, function(status) {
 		if (status !== "success") {
 			fs.write("output.txt", "Check internet connection to https://fast.com/\n", 'w');
-			fs.write("output.txt", "F: D: " + "-1 error\n", 'a');
+			fs.write("output.txt", "F: D: " + "-1 error ", 'a');
 			phantom.exit();
 		}
 		else {
@@ -295,7 +295,7 @@ function updateSpeedtestDataFast() {
 }
 
 function finalSpeedtestDataFast(speed, units) {
-	fs.write("output.txt", "F: D: " + (Math.round(speed * 100) / 100).toFixed(2) + " " + units, 'a');
+	fs.write("output.txt", "F: D: " + (Math.round(speed * 100) / 100).toFixed(2) + " " + units + "\n", 'a');
 	phantom.exit();
 }
 
@@ -317,7 +317,7 @@ function switchToSpeedof() {
 	page.open(address, function(status) {
 		if (status !== "success") {
 			fs.write("output.txt", "Check internet connection to http://speedof.me/\n", 'w');
-			fs.write("output.txt", "F: P: " + "-1 error " + "D: " + "-1 error " + "U: " + "-1  error\n", 'a');
+			fs.write("output.txt", "F: P: " + "-1 error " + "D: " + "-1 error " + "U: " + "-1 error" + "\n", 'a');
 			phantom.exit();
 		}
 		else {
@@ -379,7 +379,7 @@ function updateSpeedtestDataSpeedof() {
 
 function finalSpeedtestDataSpeedof(downloadSpeed, downloadSize, uploadSpeed, uploadSize) {
 
-	fs.write("output.txt", "F: D: " + downloadSpeed + downloadSize + " U: " + uploadSpeed + uploadSize + "\n", 'a');
+	fs.write("output.txt", "P:" + "-1 error" + " D:" + downloadSpeed + downloadSize + " U:" + uploadSpeed + uploadSize + "\n", 'a');
 	phantom.exit();
 }
 
@@ -400,7 +400,7 @@ function switchToBandwidthplace() {
 	page.open(address, function(status) {
 		if (status !== "success") {
 			fs.write("output.txt", "Check internet connection to http://www.bandwidthplace.com/\n", 'w');
-			fs.write("output.txt", "F: P: " + "-1 error " + "D: " + "-1 error " + "U: " + "-1  error\n", 'a');
+			fs.write("output.txt", "F: P: " + "-1 error " + "D: " + "-1 error " + "U: " + "-1 error" + "\n", 'a');
 			phantom.exit();
 		}
 		else {
@@ -462,7 +462,7 @@ function finalSpeedtestDataBandwidthplace() {
 		return document.getElementById("upload").innerText.replace("Upload", "").split("\n");
 	});
 
-	fs.write("output.txt", "F: P: " + ping[1] + " " + ping[2] + " D: " + download[1] + " " + download[2] + " U: " + upload[1] + " " + upload[2], 'a');
+	fs.write("output.txt", "F: P:" + ping[1] + " " + ping[2] + " D: " + download[1] + " " + download[2] + " U: " + upload[1] + " " + upload[2] + "\n", 'a');
 	phantom.exit();
 }
 
@@ -474,7 +474,7 @@ function finalSpeedtestDataBandwidthplace() {
 ██████  ███████    ██    ██   ██ ██ ███████ ██      ███████ ███████ ██████     ██    ███████ ███████    ██
 */
 
-//@TODO Since beta.speedtest.com hides curent data in a canvas, until I can find a way to get it support is shelved
+//@TODO Since beta.speedtest.com uses a canvas to display current data, until I can find a way to get the text out of it without ocr support is shelved
 
 /*
 ██ ███████ ██████      ███████ ██████  ███████ ███████ ██████  ████████ ███████ ███████ ████████ ███████
@@ -499,7 +499,7 @@ function switchToATandT() {
 	page.open(address, function(status) {
 		if (status !== "success") {
 			fs.write("output.txt", "Check internet connection to http://speedtest.att.com/speedtest/\n", 'w');
-			fs.write("output.txt", "F: P: " + "-1 error " + "D: " + "-1 error " + "U: " + "-1  error\n", 'a');
+			fs.write("output.txt", "F: P: " + "-1 error " + "D: " + "-1 error " + "U: " + "-1 error" + "\n", 'a');
 			phantom.exit();
 		}
 		else {
@@ -557,7 +557,7 @@ function finalSpeedtestDataATandT() {
 		return document.getElementById("speed").innerText.split("\n");
 	});
 
-	fs.write("output.txt", "F: P:" + results[2].replace("Latency   ", "") + " D: " + results[0].split(" ")[4] + " " + results[0].split(" ")[5] + " U: " + results[1].split(" ")[4] + " " + results[1].split(" ")[5], 'a');
+	fs.write("output.txt", "F: P:" + results[2].replace("Latency   ", "") + " D: " + results[0].split(" ")[4] + " " + results[0].split(" ")[5] + " U: " + results[1].split(" ")[4] + " " + results[1].split(" ")[5] + "\n", 'a');
 	phantom.exit();
 }
 
@@ -574,7 +574,7 @@ function switchToVerizon() {
 	page.open(address, function(status) {
 		if (status !== "success") {
 			fs.write("output.txt", "Check internet connection to https://www.verizon.com/speedtest/\n", 'w');
-			fs.write("output.txt", "F: P: " + "-1 error " + "D: " + "-1 error " + "U: " + "-1  error\n", 'a');
+			fs.write("output.txt", "F: P: " + "-1 error " + "D: " + "-1 error " + "U: " + "-1 error" + "\n", 'a');
 			phantom.exit();
 		}
 		else {
@@ -586,7 +586,7 @@ function switchToVerizon() {
 function runSpeedtestVerizon() {
 	console.log("Verizon");
 	fs.write("output.txt", "Site: Verizon\nSupports: P U D F\n", 'w');
-writeCurrPageToFile();
+	writeCurrPageToFile();
 	page.evaluate(function() {
 		var a = document.getElementById("startButton");
 		//var a = document.getElementById("start-router-test-button");
@@ -595,6 +595,7 @@ writeCurrPageToFile();
 		a.dispatchEvent(e);
 	});
 
+	doneAllInfoTypes = false;
 	updater = setInterval(updateSpeedtestDataVerizon, 150);
 
 }
@@ -605,7 +606,12 @@ function updateSpeedtestDataVerizon() {
 	var info = page.evaluate(function() {
 		return document.getElementById("the-speedtest-meter").innerText.split("\n");
 	});
+	var uploadBlockStyle = page.evaluate(function() {
+		return document.getElementById("results-upload").style.display;
+	});
+
 	//                                                                                                                                                                                      Loc[36]=1Gig
+	//["0", "·", "·", "·", "·", "|", "·", "·", "·", "20", "·", "·", "·", "·", "|", "·", "·", "·", "75", "·", "·", "·", "·", "|", "·", "·", "·", "400", "·", "·", "·", "·", "|", "·", "·", "·", "1Gig", ""]
 	//["0", "·", "·", "·", "·", "|", "·", "·", "·", "20", "·", "·", "·", "·", "|", "·", "·", "·", "75", "·", "·", "·", "·", "|", "·", "·", "·", "400", "·", "·", "·", "·", "|", "·", "·", "·", "1Gig", "Mbps", "DOWNLOAD", "19", ".", "50", ""]
 	//["0", "·", "·", "·", "·", "|", "·", "·", "·", "20", "·", "·", "·", "·", "|", "·", "·", "·", "75", "·", "·", "·", "·", "|", "·", "·", "·", "400", "·", "·", "·", "·", "|", "·", "·", "·", "1Gig", "Mbps", "UPLOAD", "6", ".", "68", ""]
 	//["0", "·", "·", "·", "·", "|", "·", "·", "·", "20", "·", "·", "·", "·", "|", "·", "·", "·", "75", "·", "·", "·", "·", "|", "·", "·", "·", "400", "·", "·", "·", "·", "|", "·", "·", "·", "1Gig", ""]
@@ -613,17 +619,30 @@ function updateSpeedtestDataVerizon() {
 	writeCurrPageToFile();
 
 	//Check if done first to prevent outofbounds error
-	if (info[37] === "") {
+	if (uploadBlockStyle === "block" && info[37] === "") {
 		clearInterval(updater);
 		finalSpeedtestDataVerizon();
 	}
 	else if (info[38] === "DOWNLOAD") {
-		var speedDown = info[38] + info[39] + info[40];
+		var speedDown = info[39] + info[40] + info[41];
 		fs.write("output.txt", "D: " + (Math.round(speedDown * 100) / 100).toFixed(2) + " " + info[37] + "\n", 'a');
 	}
 	else if (info[38] === "UPLOAD") {
-		var speedUp = info[38] + info[39] + info[40];
+		var speedUp = info[39] + info[40] + info[41];
 		fs.write("output.txt", "U: " + (Math.round(speedUp * 100) / 100).toFixed(2) + " " + info[37] + "\n", 'a');
+	}
+	else {
+		var didFail = page.evaluate(function() {
+			return document.getElementsByClassName("test-failed")[1].style.display;
+		});
+		if(didFail === "")
+		{
+			console.log("Verizon speedtest failed");
+			clearInterval(updater);
+			//@TODO add fail reason before it?
+			fs.write("output.txt", "F: P: " + "-1 error " + "D: " + "-1 error " + "U: " + "-1 error" + "\n", 'a');
+			phantom.exit();
+		}
 	}
 }
 
@@ -638,7 +657,7 @@ function finalSpeedtestDataVerizon() {
 	//});
 
 	var ping = page.evaluate(function() {
-		//Lol verizon thats not an int
+		//Another place where I found ping on their page, seems to be enter on page load
 		return document.getElementsByClassName("test-value")[0].innerText.replace("										", "").replace("										", "").split("\n");
 	});
 	var download = page.evaluate(function() {
@@ -656,7 +675,7 @@ function finalSpeedtestDataVerizon() {
 		return document.getElementsByClassName("value-type")[1];
 	});
 
-	fs.write("output.txt", "F: P: " + ping[1] + " " + ping[2] + " D: " +  download + " " + downloadUnits + " U: " + upload + " " + uploadUnits, 'a');
+	fs.write("output.txt", "F: P:" + ping[1] + " " + ping[2] + " D: " + download + " " + downloadUnits + " U: " + upload + " " + uploadUnitsd + "\n", 'a');
 	phantom.exit();
 }
 
