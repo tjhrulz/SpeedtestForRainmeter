@@ -4,10 +4,10 @@ function clearoutput()
 	file:close()
 end
 
-timing,timing2,timing3,timing4,timing5,timing6,timing7,timing8 = -1,0,0,0,0,0,0,-1
+timing,timing2,timing3,timing4,timing5,timing6,timing7,timing8,timing9 = -1,0,0,0,0,0,0,-1,0
 percent = 0
 reading = false
-thereError = false
+shittyInternet = false
 connected = false
 curMeasure = "Welcome"
 storeFinal = {}
@@ -24,10 +24,7 @@ color.bandwidthplace= {['sR'] = 243, ['sG'] = 070, ['sB'] = 000, ['lH1'] = 'FF51
 function Initialize()
 	cursite = SKIN:GetVariable('defaultsite')
 	site = cursite
-	sbg('SetOption LoadingBar Grad \"180|'..color[site]["lH1"]..'b4;0|'..color[site]["lH2"]..'b4;1','UpdateMeter LoadingBar',
-		'SetOptionGroup Site FontColor ' ..color["default"]["sR"]..','..color["default"]["sG"]..','..color["default"]["sB"]..',56',
-		'SetOption '..site..' FontColor '..color[site]["sR"]..','..color[site]["sG"]..','..color[site]["sB"],
-		'UpdateMeterGroup Site')
+	changesite(site)
 end
 
 function Update()
@@ -43,11 +40,33 @@ function Update()
 		oSite = contents:match("Site:%s(%w+)")
 
 		if oSite ~= nil and not connected then --Connect success trigger
-			sbg('SetOption StatusIcon Text ','SetOption Welcome Text connected')
+			if string.lower(oSite) ~= site then
+				changesite(string.lower(oSite))
+			end
+			sbg('SetOption StatusIcon Text ','SetOption Welcome Text \"connected to '..site..'\"')
 			statuscolor = "57,213,57"
 			timing = 0
 			timing4 = 1
 			connected = true
+		end
+		cantconnect,link = string.match(contents,"(Check%sinternet%sconnection%sto)%s(.*)\n")
+		--cantconnect,link = string.match("Check internet connection to http://speedtest.googlefiber.net/\n","(Check%sinternet%sconnection%sto)%s(.*)\n")
+		if cantconnect ~= nil then
+			reading = false
+			sbg('SetOption StatusIcon Text ',
+				'SetOption Welcome InlineSetting \"GradientColor|180|ffffff;((395-[*Welcome:X*])/[*Welcome:W*])|ffffff00;((395-[*Welcome:X*])/[*Welcome:W*]+0.05)\"',
+				'SetOption Welcome InlinePattern2 \".*connection to (.*)$\"',
+				'SetOption Welcome MouseOverAction \"!SetOption Welcome InlineSetting2 Underline\"',
+				'SetOption Welcome MouseLeaveAction \"!SetOption Welcome InlineSetting2 None\"',
+				'SetOption Welcome LeftMouseUpAction \"'..link..'\"',
+				'SetOption Welcome Text \"'..string.lower(cantconnect)..' '..link..'\"',
+				'SetOption Stop Text ',
+				'UpdateMeter Welcome','UpdateMeter Stop')
+			statuscolor = "255,216,1"
+			timing = 0
+			timing4 = 1
+			shittyInternet = true
+			return
 		end
 
 		for measure,speed,unit in string.gmatch(contents,"\n([PUD]):%s(.-)%s(%w+)\n") do
@@ -70,21 +89,13 @@ function Update()
 			local split = 0
 			--Display all available final result
 			for finalN,finalV in string.gmatch(finalDetail,"(.):%s(.-%s%w+)") do
-				if finalV == '-1 error' then
-					reading = false
-					sbg('SetOption StatusIcon Text ','SetOption Welcome Text \"refresh and try again\"')
-					statuscolor = "255,216,1"
-					timing = 0
-					timing4 = 1
-					return
-				end
-
 				storeFinal[finalN] = finalV
 
 				sbg('SetOption '..finalN..' FontSize 14',
 					'SetOption '..finalN..'Icon FontSize 16',
 					'SetOptionGroup '..finalN..' FontColor \"255,255,255,(255*#*final*#)\"',
-					'SetOptionGroup '..finalN..' Y \"(60*#*final*#-30)\"',
+					'SetOption '..finalN..' Y \"(65*#*final*#-30)\"',
+					'SetOption '..finalN..'Icon Y \"(60*#*final*#-30)\"',
 					'SetOption '..finalN..'Icon X 15R',
 					'SetOption '..finalN..' X 5R',
 					'SetOPtion '..finalN..' Text \"'..finalV..'\"')
@@ -93,9 +104,17 @@ function Update()
 
 				split = split + 1
 			end
-			uGY = SKIN:GetMeter('UGraph'):GetY()
-			dGY = SKIN:GetMeter('DGraph'):GetY()
-			pGY = SKIN:GetMeter('PGraph'):GetY()
+
+			pGY,pGW = SKIN:GetMeter('PGraph'):GetY(),SKIN:GetMeter('PGraph'):GetW()
+			if pGW ~= 0 then sbg('SetOption PGraph Scaling \"Scale ([*P:W*]/'..pGW..'),0.5\"') else sbg('SetOption P Y \"(60*#*final*#-30)\"')end
+			uGY,uGW = SKIN:GetMeter('UGraph'):GetY(),SKIN:GetMeter('UGraph'):GetW()
+			if uGW ~= 0 then sbg('SetOption UGraph Scaling \"Scale ([*U:W*]/'..uGW..'),0.5\"') else sbg('SetOption U Y \"(60*#*final*#-30)\"')end
+			dGY,dGW = SKIN:GetMeter('DGraph'):GetY(),SKIN:GetMeter('DGraph'):GetW()
+			if dGW ~= 0 then sbg('SetOption DGraph Scaling \"Scale ([*D:W*]/'..dGW..'),0.5\"') else sbg('SetOption D Y \"(60*#*final*#-30)\"')end
+			sbg('SetOption PGraph X \"([*P:X*]-[*PIcon:W*])\"',
+				'SetOption UGraph X \"([*U:X*]-[*UIcon:W*])\"',
+				'SetOption DGraph X \"([*D:X*]-[*DIcon:W*])\"')
+
 			reading = false
 			sbg('SetOption Stop Text ','UpdateMeter Stop','ShowMeter Share') --Change to Restart symbol, show Share button
 			timing2=0
@@ -131,7 +150,6 @@ function Update()
 		percent = timing2 / 500
 		sbg('SetVariable percent '..percent,'UpdateMeter LoadingBar')
 	elseif timing2 == 500 then
-		measures[#measures] = "F"
 		timing2 = 501
 	end
 
@@ -145,10 +163,13 @@ function Update()
 	end
 
 	if timing4 > 0 and timing4 < 50 then --Status announce
-		timing4 = timing4 + 1
 		moveoverAnimate=outQuart(timing4,0,1,50)
+		timing4 = timing4 + 1
 		sbg('SetOption Welcome X '..40+35*moveoverAnimate,'SetOption StatusIcon FontColor '..statuscolor..','..255*moveoverAnimate,'UpdateMeter Welcome','UpdateMeter StatusIcon')
 	elseif timing4 == 50 then
+		if shittyInternet then
+			timing9 = 1
+		end
 		timing4 = 51
 	end
 
@@ -188,12 +209,16 @@ function Update()
 		timing7 = timing7 + 1
 		slideoutAnimate = inCubic(timing7,0,1,40)
 		sbg('SetVariable final '..slideoutAnimate,'UpdateMeterGroup F',
-			'SetOption UGraph Y '..uGY-50*slideoutAnimate,
-			'SetOption DGraph Y '..dGY-50*slideoutAnimate,
-			'SetOption PGraph Y '..pGY-50*slideoutAnimate,
+			'SetOption PGraph Y '..-50+85*slideoutAnimate,
+			'SetOption UGraph Y '..-50+85*slideoutAnimate,
+			'SetOption DGraph Y '..-50+85*slideoutAnimate,
 			'UpdateMeterGroup G')
 	elseif timing7 == 40 then
-		sbg('SetOption U LeftMouseUpAction \"[!CommandMeasure Script convertMeter=\'U\';dir=1;timing8=1]\"','SetOption D LeftMouseUpAction \"[!CommandMeasure Script convertMeter=\'D\';dir=1;timing8=1]\"','SetOption P LeftMouseUpAction \"[!SetOption P TooltipText Really?][!UpdateMeter P]\"','UpdateMeterGroup F')
+		sbg('SetOption U LeftMouseUpAction \"[!CommandMeasure Script convertMeter=\'U\';dir=1;timing8=1]\"',
+			'SetOption D LeftMouseUpAction \"[!CommandMeasure Script convertMeter=\'D\';dir=1;timing8=1]\"',
+			'SetOption P LeftMouseUpAction \"[!SetOption P TooltipText Really?][!UpdateMeter P]\"',
+			'SetOptionGroup M InlineSetting4 \"Shadow|0|-2|2|00000056\"',
+			'UpdateMeterGroup F')
 		timing7 = 41
 	end
 
@@ -201,7 +226,7 @@ function Update()
 		timing8 = timing8 + 1*dir
 		fadingAnimate = outQuart(timing8,0,1,15)
 		sbg('SetOption U LeftMouseUpAction \" \"','SetOption D LeftMouseUpAction \" \"','UpdateMeter U','UpdateMeter D')
-		sbg('SetOption '..convertMeter..' FontColor 255,2555,255,'..(255-255*fadingAnimate)..')')
+		sbg('SetOption '..convertMeter..' FontColor 255,2555,255,'..(255-255*fadingAnimate)..')') --Convert unit
 	elseif timing8 == 15 then
 		sbg('SetOption '..convertMeter..' Text \"'..convert(convertMeter)..'\"','UpdateMeter '..convertMeter)
 		dir = -1
@@ -209,6 +234,23 @@ function Update()
 	elseif timing8 == 0 then
 		sbg('SetOption U LeftMouseUpAction \"[!CommandMeasure Script convertMeter=\'U\';dir=1;timing8=1]\"','SetOption D LeftMouseUpAction \"[!CommandMeasure Script convertMeter=\'D\';dir=1;timing8=1]\"','UpdateMeter U','UpdateMeter D')
 		timing8 = -1
+	end
+
+	if timing9 > 0 and timing9 < 450 then --Error 
+		timing9 = timing9 + 1
+		local head = (75-SKIN:GetMeter('Welcome'):GetX())/SKIN:GetMeter('Welcome'):GetW()
+		local tail = 320/SKIN:GetMeter('Welcome'):GetW()
+		if timing9 > 50 and tail < 1 then
+			sbg('SetOption Welcome X '..75-(SKIN:GetMeter('Welcome'):GetW()+75)*(timing9-50)/400,
+				'SetOption Welcome InlineSetting \"GradientColor | 180 | ffffff00 ;('..head..') | ffffff;'..(head+0.05)..'|ffffff;'..(head+tail)..'|ffffff00;'..(head+tail+0.05)..'\"',
+				'UpdateMeter Welcome')
+		else
+			sbg('SetOption Welcome X 75',
+				'SetOption Welcome InlineSetting \"GradientColor | 180 |ffffff;'..tail..'|ffffff00;'..tail+0.05,
+				'UpdateMeter Welcome')
+		end
+	elseif timing9 == 450 then
+		timing9 = 1
 	end
 end
 
@@ -258,14 +300,18 @@ function graph(s)
 		elseif u == 'null' then
 			u = 0
 		end
-		if (#speeds*SKIN:GetVariable('graphdistance')) > width then sbg('SetVariable graphdistance (#graphdistance#-0.1)') end
+		if (#speeds*SKIN:GetVariable('graphdistance'..s)) > width then sbg('SetVariable graphdistance (#graphdistance#-0.1)') end
 		--Draw paths
 		if s == measures[k] then
-			path = path .. '|Lineto ('..(k-oldData)..'*#*graphdistance*#),'..(-v*step*u)
+			path = path .. '|Lineto ('..(k-oldData)..'*#*graphdistance'..s..'*#),'..(-v*step*u)
+			closingPath2 = k-oldData
+			print(closingPath2)
 		end
+
 	end
+	path2 = path .. '| Lineto ('..closingPath2..'*#*graphdistance'..s..'*#),0 | Lineto 0,0 |ClosePath 1'
 	path = path .. '|ClosePath 0'
-	sbg('SetOption '..s..'Graph Graph \"'..path..'\"','UpdateMeter '..s..'Graph')
+	sbg('SetOption '..s..'Graph Graph \"'..path..'\"','SetOption '..s..'Graph Graph2 \"'..path2..'\"','UpdateMeter '..s..'Graph')
 end
 
 function changesite(s)
