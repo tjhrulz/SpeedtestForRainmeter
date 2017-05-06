@@ -94,7 +94,7 @@ function Update()
 				sbg('SetOption '..finalN..' FontSize 14',
 					'SetOption '..finalN..'Icon FontSize 16',
 					'SetOptionGroup '..finalN..' FontColor \"255,255,255,(255*#*final*#)\"',
-					'SetOption '..finalN..' Y \"(65*#*final*#-30)\"',
+					'SetOption '..finalN..' Y \"(70*#*final*#-30)\"',
 					'SetOption '..finalN..'Icon Y \"(60*#*final*#-30)\"',
 					'SetOption '..finalN..'Icon X 15R',
 					'SetOption '..finalN..' X 5R',
@@ -106,14 +106,14 @@ function Update()
 			end
 
 			pGY,pGW = SKIN:GetMeter('PGraph'):GetY(),SKIN:GetMeter('PGraph'):GetW()
-			if pGW ~= 0 then sbg('SetOption PGraph Scaling \"Scale ([*P:W*]/'..pGW..'),0.5\"') else sbg('SetOption P Y \"(60*#*final*#-30)\"')end
+			if pGW ~= 0 then sbg('SetOption PGraph Scaling \"Scale ([*P:W*]/'..pGW..'),0.5,0,0\"') else sbg('SetOption P Y \"(60*#*final*#-30)\"')end
 			uGY,uGW = SKIN:GetMeter('UGraph'):GetY(),SKIN:GetMeter('UGraph'):GetW()
-			if uGW ~= 0 then sbg('SetOption UGraph Scaling \"Scale ([*U:W*]/'..uGW..'),0.5\"') else sbg('SetOption U Y \"(60*#*final*#-30)\"')end
+			if uGW ~= 0 then sbg('SetOption UGraph Scaling \"Scale ([*U:W*]/'..uGW..'),0.5,0,0\"') else sbg('SetOption U Y \"(60*#*final*#-30)\"')end
 			dGY,dGW = SKIN:GetMeter('DGraph'):GetY(),SKIN:GetMeter('DGraph'):GetW()
-			if dGW ~= 0 then sbg('SetOption DGraph Scaling \"Scale ([*D:W*]/'..dGW..'),0.5\"') else sbg('SetOption D Y \"(60*#*final*#-30)\"')end
-			sbg('SetOption PGraph X \"([*P:X*]-[*PIcon:W*])\"',
-				'SetOption UGraph X \"([*U:X*]-[*UIcon:W*])\"',
-				'SetOption DGraph X \"([*D:X*]-[*DIcon:W*])\"')
+			if dGW ~= 0 then sbg('SetOption DGraph Scaling \"Scale ([*D:W*]/'..dGW..'),0.5,0,0\"') else sbg('SetOption D Y \"(60*#*final*#-30)\"')end
+			sbg('SetOption PGraph X \"([*P:X*])\"',
+				'SetOption UGraph X \"([*U:X*])\"',
+				'SetOption DGraph X \"([*D:X*])\"')
 
 			reading = false
 			sbg('SetOption Stop Text ','UpdateMeter Stop','ShowMeter Share') --Change to Restart symbol, show Share button
@@ -209,9 +209,9 @@ function Update()
 		timing7 = timing7 + 1
 		slideoutAnimate = inCubic(timing7,0,1,40)
 		sbg('SetVariable final '..slideoutAnimate,'UpdateMeterGroup F',
-			'SetOption PGraph Y '..-50+85*slideoutAnimate,
-			'SetOption UGraph Y '..-50+85*slideoutAnimate,
-			'SetOption DGraph Y '..-50+85*slideoutAnimate,
+			'SetOption PGraph Y '..-50+95*slideoutAnimate,
+			'SetOption UGraph Y '..-50+95*slideoutAnimate,
+			'SetOption DGraph Y '..-50+95*slideoutAnimate,
 			'UpdateMeterGroup G')
 	elseif timing7 == 40 then
 		sbg('SetOption U LeftMouseUpAction \"[!CommandMeasure Script convertMeter=\'U\';dir=1;timing8=1]\"',
@@ -300,12 +300,11 @@ function graph(s)
 		elseif u == 'null' then
 			u = 0
 		end
-		if (#speeds*SKIN:GetVariable('graphdistance'..s)) > width then sbg('SetVariable graphdistance (#graphdistance#-0.1)') end
+		if (#speeds*SKIN:GetVariable('graphdistance'..s)) > width then sbg('SetVariable graphdistance'..s..' (#graphdistance'..s..'#-0.1)') end
 		--Draw paths
 		if s == measures[k] then
 			path = path .. '|Lineto ('..(k-oldData)..'*#*graphdistance'..s..'*#),'..(-v*step*u)
 			closingPath2 = k-oldData
-			print(closingPath2)
 		end
 
 	end
