@@ -640,6 +640,7 @@ function updateSpeedtestDataVerizon() {
 			console.log("Verizon speedtest failed");
 			clearInterval(updater);
 			//@TODO add fail reason before it?
+			fs.write("output.txt", "Check internet connection to https://www.verizon.com/speedtest/\n", 'w');
 			fs.write("output.txt", "F: P: " + "-1 error " + "D: " + "-1 error " + "U: " + "-1 error" + "\n", 'a');
 			phantom.exit();
 		}
