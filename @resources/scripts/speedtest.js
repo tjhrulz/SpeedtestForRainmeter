@@ -462,7 +462,7 @@ function finalSpeedtestDataBandwidthplace() {
 		return document.getElementById("upload").innerText.replace("Upload", "").split("\n");
 	});
 
-	fs.write("output.txt", "F: P:" + ping[1] + " " + ping[2] + " D: " + download[1] + " " + download[2] + " U: " + upload[1] + " " + upload[2] + "\n", 'a');
+	fs.write("output.txt", "F: P: " + ping[1] + " " + ping[2] + " D: " + download[1] + " " + download[2] + " U: " + upload[1] + " " + upload[2] + "\n", 'a');
 	phantom.exit();
 }
 
@@ -557,7 +557,7 @@ function finalSpeedtestDataATandT() {
 		return document.getElementById("speed").innerText.split("\n");
 	});
 
-	fs.write("output.txt", "F: P:" + results[2].replace("Latency   ", "") + " D: " + results[0].split(" ")[4] + " " + results[0].split(" ")[5] + " U: " + results[1].split(" ")[4] + " " + results[1].split(" ")[5] + "\n", 'a');
+	fs.write("output.txt", "F: P: " + results[2].replace("Latency   ", "") + " D: " + results[0].split(" ")[4] + " " + results[0].split(" ")[5] + " U: " + results[1].split(" ")[4] + " " + results[1].split(" ")[5] + "\n", 'a');
 	phantom.exit();
 }
 
@@ -675,7 +675,7 @@ function finalSpeedtestDataVerizon() {
 		return document.getElementsByClassName("value-type")[1];
 	});
 
-	fs.write("output.txt", "F: P:" + ping[1] + " " + ping[2] + " D: " + download + " " + downloadUnits + " U: " + upload + " " + uploadUnitsd + "\n", 'a');
+	fs.write("output.txt", "F: P: " + ping[1] + " " + ping[2] + " D: " + download + " " + downloadUnits + " U: " + upload + " " + uploadUnitsd + "\n", 'a');
 	phantom.exit();
 }
 
