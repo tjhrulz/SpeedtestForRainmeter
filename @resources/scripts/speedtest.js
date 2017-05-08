@@ -184,10 +184,11 @@ function runSpeedtestGoogle() {
 		updater = setInterval(updateSpeedtestDataGoogle, 150);
 	}
 	else {
-
-		console.log("Google speedtest unsupported in your contry, switching to fallback");
+		fs.write("output.txt", "Google speedtest unsupported in your country","w");
+		phantom.exit();
+		//console.log("Google speedtest unsupported in your contry, switching to fallback");
 		//Run in 100ms so that way the connection to google has time to close
-		setTimeout(runSpeedtestFast, 100);
+		//setTimeout(runSpeedtestFast, 100);
 	}
 }
 
