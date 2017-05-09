@@ -47,13 +47,13 @@ var system = require('system');
 
 
 //@TODO Decide on a new fallback for Google that has the same feature set
+	//@TODO Add flag to enable fallback mode
 //@TODO Fine tune refresh speeds per site
-//Sites that are fine turned:
+	//Sites that are fine turned:
 //@TODO Add fatal error catching (Possibly add timeout too?)
-//@TODO Fix bandwidthplace sometimes getting ping stuck (Reset connection after so too long pinging (Note I have no way of knowing ping till it is done), maybe 5 seconds?)
-//Note sometimes it seems like it is stuck but it is not since it seems they run multiple pings
+	//@TODO Fix bandwidthplace sometimes getting ping stuck (Seems to be a reliability issue on their end would be addressed by issue above)
 //@TODO Sites to add support for:
-//Verizon, beta.speedtest.net (Canvas extract)
+	//Verizon, beta.speedtest.net (Canvas extract)
 
 if (system.args.length > 1) {
 	address = system.args[1].toLowerCase();
@@ -78,7 +78,7 @@ if (system.args.length > 1) {
 	else if (address == "at&t" || address == "at" || address == "att" || address == "atandt") {
 		console.log("at&t blocks phantomjs, switching to google");
 		address = "https://www.google.com/search?q=speedtest";
-		address = "http://speedtest.att.com/speedtest/";
+		//address = "http://speedtest.att.com/speedtest/";
 	}
 	else if (address == "verizon" || address == "fios") {
 		address = "https://www.verizon.com/speedtest/";
@@ -105,11 +105,11 @@ else {
 console.log(address);
 var outputCount = 0;
 
-//page.viewportSize = {
-//	width: 480,
-//	height: 800
-//};
-//page.settings.userAgent = "Mozilla/5.0 (Linux; Android 5.1.1; Nexus 5 Build/LMY48B; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/43.0.2357.65 Mobile Safari/537.36";
+page.viewportSize = {
+	width: 480,
+	height: 800
+};
+page.settings.userAgent = "Mozilla/5.0 (Linux; Android 5.1.1; Nexus 5 Build/LMY48B; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/43.0.2357.65 Mobile Safari/537.36";
 
 page.open(address, function(status) {
 	console.log(status);
@@ -138,15 +138,15 @@ page.open(address, function(status) {
 		//else if (address == "http://beta.speedtest.net/") {
 		//	runSpeedtestSpeedtestBeta();
 		//}
-		else if (address == "http://speedtest.att.com/speedtest/") {
-			runSpeedtestATandT();
-		}
+		//else if (address == "http://speedtest.att.com/speedtest/") {
+		//	runSpeedtestATandT();
+		//}
 		else if (address == "https://www.verizon.com/speedtest/") {
 			runSpeedtestVerizon();
 		}
-		else if (address == "http://speedtest.xfinity.com/") {
-			runSpeedtestComcast();
-		}
+		//else if (address == "http://speedtest.xfinity.com/") {
+		//	runSpeedtestComcast();
+		//}
 		else {
 			fs.write("output.txt", "Unsupported speedtest website " + address + "\n", 'w');
 			fs.write("output.txt", "P: " + "-1 error" + " D:" + "-1 error" + " U:" + "-1 error", 'a');
@@ -278,9 +278,9 @@ function updateSpeedtestDataFast() {
 		return document.getElementById("speed-units").innerText;
 	});
 
-	//writeCurrPageToFile();
+	writeCurrPageToFile();
 
-	if (units !== " ") {
+	if (units !== " " && units !== "\0" && units) {
 		fs.write("output.txt", "D: " + (Math.round(speed * 100) / 100).toFixed(2) + " " + units + "\n", 'a');
 	}
 
