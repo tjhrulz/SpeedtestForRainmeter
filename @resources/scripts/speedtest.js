@@ -280,9 +280,9 @@ function updateSpeedtestDataFast() {
 		return document.getElementById("speed-units").innerText;
 	});
 
-	writeCurrPageToFile();
+	//writeCurrPageToFile();
 
-	if (units !== " " && units !== "\0" && units) {
+	if (units !== " " && units !== "\u00a0" && units) {
 		fs.write("output.txt", "D: " + (Math.round(speed * 100) / 100).toFixed(2) + " " + units + "\n", 'a');
 	}
 
@@ -361,7 +361,7 @@ function updateSpeedtestDataSpeedof() {
 		return document.getElementById("msgContainer3").innerText.Split(" ");
 	});
 
-	writeCurrPageToFile();
+	//writeCurrPageToFile();
 
 
 	//Location 0 is always info text, Location 1 is always speed, Location 2 is always units
@@ -589,7 +589,7 @@ function switchToVerizon() {
 function runSpeedtestVerizon() {
 	console.log("Verizon");
 	fs.write("output.txt", "Site: Verizon\nSupports: P U D F\n", 'w');
-	writeCurrPageToFile();
+	
 	page.evaluate(function() {
 		var a = document.getElementById("startButton");
 		//var a = document.getElementById("start-router-test-button");
