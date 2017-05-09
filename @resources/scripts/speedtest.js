@@ -47,13 +47,13 @@ var system = require('system');
 
 
 //@TODO Decide on a new fallback for Google that has the same feature set
-	//@TODO Add flag to enable fallback mode
+//@TODO Add flag to enable fallback mode
 //@TODO Fine tune refresh speeds per site
-	//Sites that are fine turned:
+//Sites that are fine turned:
 //@TODO Add fatal error catching (Possibly add timeout too?)
-	//@TODO Fix bandwidthplace sometimes getting ping stuck (Seems to be a reliability issue on their end would be addressed by issue above)
+//@TODO Fix bandwidthplace sometimes getting ping stuck (Seems to be a reliability issue on their end would be addressed by issue above)
 //@TODO Sites to add support for:
-	//Verizon, beta.speedtest.net (Canvas extract)
+//Verizon, beta.speedtest.net (Canvas extract)
 
 if (system.args.length > 1) {
 	address = system.args[1].toLowerCase();
@@ -81,7 +81,9 @@ if (system.args.length > 1) {
 		//address = "http://speedtest.att.com/speedtest/";
 	}
 	else if (address == "verizon" || address == "fios") {
-		address = "https://www.verizon.com/speedtest/";
+		console.log("Verizon does some shady stuff with their speedtest and it fails frequently when using phantomjs, switching to google");
+		address = "https://www.google.com/search?q=speedtest";
+		//address = "https://www.verizon.com/speedtest/";
 	}
 	else if (address == "comcast" || address == "xfinity") {
 		console.log("Comcast (Fuck Comcast btw) blocks phantomjs, switching to google");
@@ -129,21 +131,21 @@ page.open(address, function(status) {
 		else if (address == "https://fast.com/") {
 			runSpeedtestFast();
 		}
-		//else if (address == "http://speedof.me/") {
-		//	runSpeedtestSpeedof();
-		//}
 		else if (address == "http://www.bandwidthplace.com/") {
 			runSpeedtestBandwidthplace();
 		}
 		//else if (address == "http://beta.speedtest.net/") {
 		//	runSpeedtestSpeedtestBeta();
 		//}
+		//else if (address == "http://speedof.me/") {
+		//	runSpeedtestSpeedof();
+		//}
 		//else if (address == "http://speedtest.att.com/speedtest/") {
 		//	runSpeedtestATandT();
 		//}
-		else if (address == "https://www.verizon.com/speedtest/") {
-			runSpeedtestVerizon();
-		}
+		//else if (address == "https://www.verizon.com/speedtest/") {
+		//	runSpeedtestVerizon();
+		//}
 		//else if (address == "http://speedtest.xfinity.com/") {
 		//	runSpeedtestComcast();
 		//}
@@ -184,7 +186,7 @@ function runSpeedtestGoogle() {
 		updater = setInterval(updateSpeedtestDataGoogle, 150);
 	}
 	else {
-		fs.write("output.txt", "Google speedtest unsupported in your country","w");
+		fs.write("output.txt", "Google speedtest unsupported in your country", "w");
 		phantom.exit();
 		//console.log("Google speedtest unsupported in your contry, switching to fallback");
 		//Run in 100ms so that way the connection to google has time to close
@@ -596,7 +598,10 @@ function runSpeedtestVerizon() {
 		a.dispatchEvent(e);
 	});
 
-	doneAllInfoTypes = false;
+	//Verizon's website says fail until it doesn't, keep trying a few times just to see
+	countTriesToUpdate = 0;
+	maxTriesToUpdate = 30;
+
 	updater = setInterval(updateSpeedtestDataVerizon, 150);
 
 }
@@ -636,14 +641,16 @@ function updateSpeedtestDataVerizon() {
 		var didFail = page.evaluate(function() {
 			return document.getElementsByClassName("test-failed")[1].style.display;
 		});
-		if(didFail === "")
-		{
-			console.log("Verizon speedtest failed");
-			clearInterval(updater);
-			//@TODO add fail reason before it?
-			fs.write("output.txt", "Check internet connection to https://www.verizon.com/speedtest/\n", 'w');
-			fs.write("output.txt", "F: P: " + "-1 error " + "D: " + "-1 error " + "U: " + "-1 error" + "\n", 'a');
-			phantom.exit();
+		if (didFail === "") {
+			if (countTriesToUpdate > maxTriesToUpdate) {
+				//console.log("Verizon speedtest failed");
+				//clearInterval(updater);
+				////@TODO add fail reason before it?
+				//fs.write("output.txt", "Check internet connection to https://www.verizon.com/speedtest/\n", 'w');
+				fs.write("output.txt", "F: P: " + "-1 error " + "D: " + "-1 error " + "U: " + "-1 error" + "\n", 'a');
+				//phantom.exit();
+			}
+			countTriesToUpdate++;
 		}
 	}
 }
@@ -696,5 +703,6 @@ function writeCurrPageToFile() {
 	fs.write(outputCount + "output.html", page.evaluate(function() {
 		return document.body.innerHTML;
 	}), 'w');
+	page.render(outputCount + "output.png", "png");
 	outputCount++;
 }
